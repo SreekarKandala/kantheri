@@ -1,28 +1,4062 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Page</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            color: #555;
-            line-height: 1.6;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KANTHERI — Data Engineering, Reimagined</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<style>
+/* ─── RESET & VARS ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* KC palette (as provided) */
+:root {
+  /* Primary */
+  --kc-orange: #EB6223;
+  --kc-navy:   #013367;
+  --kc-grey:   #949494;
+  --kc-white:  #FFFFFF;
+
+  /* Supporting accents (from provided palette) */
+  --kc-cyan:   #41D0EB;
+  --kc-green:  #9BDA8F;
+  --kc-gold:   #D9B300;
+  --kc-red:    #D64550;
+
+  /* Additional neutrals (from provided palette) */
+  --kc-ink:    #1C2325;
+  --kc-slate:  #293537;
+  --kc-slate2: #475052;
+  --kc-slate3: #5F6B6D;
+  --kc-slate4: #7F898A;
+
+  /* Theme tokens (restricted to palette + derived RGBA) */
+  --clr-bg:        var(--kc-white);
+  --clr-surface:   var(--kc-white);
+  --clr-card:      var(--kc-white);
+  --clr-border:    rgba(1,51,103,0.10); /* derived from KC navy */
+  --clr-accent:    var(--kc-orange);
+  --clr-accent2:   var(--kc-cyan);
+  --clr-accent3:   var(--kc-green);
+  --clr-text:      var(--kc-ink);
+  --clr-text-dim:  var(--kc-grey);
+  --clr-white:     var(--kc-navy);
+  --clr-dark:      var(--kc-slate);
+
+  --font-head:     'Syne', sans-serif;
+  --font-code:     'DM Mono', monospace;
+  --font-body:     'Inter', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--clr-bg);
+  color: var(--clr-text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ─── NOISE OVERLAY ─── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* ─── CANVAS BG ─── */
+#bgCanvas {
+  position: fixed; inset: 0;
+  z-index: -1;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+
+/* ─── NAV ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 2.5rem;
+  background: rgba(255,255,255,0.90);
+  backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid var(--clr-border);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  transition: padding .35s;
+}
+nav.scrolled { padding: .85rem 2.5rem; }
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+/* LOGO: larger + more prominent */
+.nav-logo img {
+  height: 58px; /* increased for prominence */
+  width: auto;
+  transition: filter .3s, opacity .3s, transform .3s;
+  filter: drop-shadow(0 6px 18px rgba(1,51,103,0.10));
+}
+nav.scrolled .nav-logo img { height: 52px; }
+.nav-logo:hover img {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.nav-links {
+  display: flex; gap: 2.2rem;
+  list-style: none;
+}
+.nav-links a {
+  color: var(--clr-white);
+  text-decoration: none;
+  font-size: .82rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  position: relative;
+  transition: color .3s;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute; bottom: -4px; left: 0;
+  width: 0; height: 2px;
+  background: var(--clr-accent);
+  transition: width .35s;
+  border-radius: 2px;
+}
+.nav-links a:hover { color: var(--clr-accent); }
+.nav-links a:hover::after { width: 100%; }
+
+.nav-cta {
+  padding: .52rem 1.3rem;
+  border: 1px solid var(--clr-accent);
+  border-radius: 10px;
+  color: var(--clr-accent) !important;
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  transition: background .3s, box-shadow .3s, transform .2s;
+  text-decoration: none;
+  background: rgba(235,98,35,0.05);
+}
+.nav-cta:hover {
+  background: var(--clr-accent);
+  color: #fff !important;
+  box-shadow: 0 0 22px rgba(235,98,35,.25);
+  transform: translateY(-1px);
+}
+.nav-cta::after { display: none !important; }
+
+/* ─── HERO ─── */
+/* ─── HERO HORIZONTAL SCROLL (ADDITIONAL PANEL) ─── */
+.hero {
+  overflow: hidden; /* carousel handles scrolling */
+}
+
+.hero-carousel {
+  position: relative;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 0.5rem;
+}
+
+/* Scrollbar (subtle) */
+.hero-carousel::-webkit-scrollbar { height: 8px; }
+.hero-carousel::-webkit-scrollbar-thumb { background: rgba(1,51,103,0.12); border-radius: 999px; }
+.hero-carousel::-webkit-scrollbar-track { background: rgba(1,51,103,0.04); border-radius: 999px; }
+
+
+/* ─── HERO NAV (prev/next) ─── */
+.hero-nav{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid rgba(1,51,103,0.12);
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(12px) saturate(1.3);
+  box-shadow: 0 10px 26px rgba(1,51,103,0.10);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: transform .18s, box-shadow .25s, border-color .25s, opacity .25s;
+}
+.hero-nav:hover{
+  transform: translateY(-50%) scale(1.03);
+  border-color: rgba(235,98,35,0.35);
+  box-shadow: 0 14px 36px rgba(1,51,103,0.14);
+}
+.hero-nav:active{
+  transform: translateY(-50%) scale(0.98);
+}
+.hero-nav svg{
+  width: 18px; height: 18px;
+  stroke: var(--kc-navy);
+  stroke-width: 2.4;
+  fill: none;
+}
+.hero-nav-prev{ left: max(1rem, calc((100vw - 1320px)/2 + 0.25rem)); }
+.hero-nav-next{ right: max(1rem, calc((100vw - 1320px)/2 + 0.25rem)); }
+
+.hero-nav.is-hidden{
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 900px){
+  .hero-nav-prev{ left: 0.8rem; }
+  .hero-nav-next{ right: 0.8rem; }
+}
+@media (max-width: 600px){
+  .hero-nav{
+    width: 42px; height: 42px;
+    border-radius: 12px;
+  }
+}
+
+.hero-slide {
+  scroll-snap-align: center;
+  flex: 0 0 100%;
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+}
+
+.hero-slide-inner {
+  width: 100%;
+  max-width: 880px;
+}
+
+.hero-kicker {
+  margin-top: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .38rem 1rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 50px;
+  font-family: var(--font-code);
+  font-size: .72rem;
+  color: var(--kc-navy);
+  letter-spacing: .08em;
+  background: rgba(235,98,35,0.06);
+}
+
+.hero-kicker .spark {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--kc-orange);
+  box-shadow: 0 0 10px rgba(235,98,35,0.55);
+}
+
+.hero-panel {
+  margin-top: 1.4rem;
+  width: 100%;
+  border: 1px solid rgba(1,51,103,0.12);
+  background: rgba(255,255,255,0.92);
+  border-radius: 18px;
+  padding: 2.2rem 2rem;
+  box-shadow: 0 14px 44px rgba(1,51,103,0.08);
+}
+
+.hero h2 {
+  font-family: var(--font-head);
+  font-size: clamp(2.9rem, 7.5vw, 6.2rem);
+  font-weight: 600;
+  line-height: 0.8;
+  color: var(--clr-white);
+  letter-spacing: -.02em;
+  animation: fadeUp .9s .15s both;
+}
+.hero h2 .grad {
+  background: linear-gradient(135deg, var(--clr-accent), var(--clr-accent2), var(--clr-accent3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-panel h2 {
+  font-family: var(--font-head);
+  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--kc-navy);
+  margin-bottom: 0.9rem;
+}
+
+.hero-panel h2 .emph {
+  color: var(--kc-orange);
+}
+
+.hero-panel p {
+  font-size: .95rem;
+  color: var(--kc-slate3);
+  font-weight: 300;
+  max-width: 62ch;
+  margin: 0 auto 1.2rem;
+}
+
+.hero-micro {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .6rem;
+  margin-top: .8rem;
+}
+
+.hero-chip {
+  font-family: var(--font-code);
+  font-size: .68rem;
+  padding: .32rem .75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(1,51,103,0.10);
+  color: var(--kc-navy);
+  background: rgba(65,208,235,0.06);
+  letter-spacing: .06em;
+}
+
+.hero-scroll-hint {
+  margin-top: 1.15rem;
+  font-family: var(--font-code);
+  font-size: .68rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--clr-text-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+/* Hide legacy per-slide arrows; replaced by dedicated hero nav controls */
+.hero-scroll-hint{ display:none !important; }
+
+.hero-scroll-hint .arrow {
+  color: var(--kc-orange);
+  font-weight: 900;
+  font-size: 2rem;
+}
+
+@media (max-width: 600px) {
+  .hero-panel { padding: 1.7rem 1.25rem; }
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 6rem 2rem 4rem;
+}
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: .55rem;
+  padding: .38rem 1rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 50px;
+  font-family: var(--font-code);
+  font-size: .72rem;
+  color: var(--clr-accent);
+  letter-spacing: .08em;
+  margin-bottom: 2rem;
+  animation: fadeDown .7s .2s both;
+  background: rgba(65,208,235,0.06);
+}
+.hero-badge .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--clr-accent3);
+  box-shadow: 0 0 8px rgba(155,218,143,0.9);
+  animation: pulse 2s infinite;
+}
+
+.hero h1 {
+  font-family: var(--font-head);
+  font-size: clamp(2.9rem, 7.5vw, 6.2rem);
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--clr-white);
+  letter-spacing: -.02em;
+  animation: fadeUp .9s .15s both;
+}
+.hero h1 .grad {
+  background: linear-gradient(135deg, var(--clr-accent), var(--clr-accent2), var(--clr-accent3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  max-width: 580px;
+  margin: 1.8rem auto 0;
+  font-size: 1.05rem;
+  color: var(--clr-text-dim);
+  font-weight: 300;
+  animation: fadeUp .9s .38s both;
+}
+
+.hero-actions {
+  margin-top: 3rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  animation: fadeUp .9s .55s both;
+}
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .82rem 2rem;
+  background: linear-gradient(135deg, var(--clr-accent), var(--kc-navy));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 10px 34px rgba(1,51,103,.18);
+  transition: transform .25s, box-shadow .25s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 44px rgba(1,51,103,.24); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .82rem 1.8rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  color: var(--clr-text);
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color .3s, color .3s, background .3s;
+  background: rgba(1,51,103,0.02);
+}
+.btn-ghost:hover { border-color: rgba(235,98,35,0.35); color: var(--clr-accent); background: rgba(235,98,35,0.04); }
+
+/* Partner band: upgraded for visibility */
+
+/* Partner band inside carousel (avoid absolute positioning conflicts) */
+.hero-slide .hero-partners { position: static; margin-top: 2.2rem; }
+
+.hero-partners {
+  position: absolute; bottom: 2.3rem; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: center; gap: 1.6rem;
+  z-index: 1;
+  animation: fadeUp .9s .75s both;
+  flex-wrap: wrap;
+}
+
+.hero-partners .trust-band {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: .85rem 1.15rem;
+  border: 1px solid rgba(1,51,103,0.12);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 10px 30px rgba(1,51,103,0.06);
+}
+
+.hero-partners .trust-label {
+  font-family: var(--font-code);
+  font-size: .7rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--clr-text-dim);
+  padding-right: .25rem;
+}
+
+.partner-logos {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.partner-logo {
+  height: 34px; /* larger than previous pills */
+  width: auto;
+  opacity: 0.92;
+  filter: grayscale(100%);
+  transition: opacity .25s, filter .25s, transform .25s;
+}
+.partner-logo:hover {
+  opacity: 1;
+  filter: grayscale(0%);
+  transform: translateY(-1px);
+}
+
+/* Fallback pill (if logo images fail) */
+.partner-pill {
+  padding: .42rem 1.1rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  font-family: var(--font-head);
+  font-size: .75rem;
+  font-weight: 800;
+  color: var(--clr-white);
+  letter-spacing: .12em;
+  transition: border-color .3s, color .3s, background .3s;
+  background: rgba(1,51,103,0.03);
+}
+.partner-pill:hover { border-color: rgba(235,98,35,0.35); color: var(--clr-accent); background: rgba(235,98,35,0.04); }
+
+/* Hide partner band inside HERO carousel; render as a dedicated section below HERO */
+.hero .hero-partners { display: none; }
+
+/* ─── PARTNERS SECTION ─── */
+.partners {
+  padding: 3.5rem 2rem 6rem;
+  text-align: center;
+}
+.partners-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.partners .partners-kicker {
+  font-family: var(--font-code);
+  font-size: .7rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--kc-navy);
+  margin-bottom: 1.1rem;
+  display: block;
+}
+.partners .trust-band {
+  justify-content: center;
+  margin: 0 auto;
+}
+.partners .trust-label {
+  color: var(--kc-orange);
+  opacity: 1;
+  font-weight: 800;
+}
+.partners .partner-logo {
+  opacity: 1;
+  filter: none;
+}
+
+/* ─── SECTIONS WRAPPER ─── */
+section { position: relative; z-index: 1; }
+
+/* ─── ABOUT ─── */
+.about {
+  padding: 7rem 2rem;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+.about-visual {
+  position: relative;
+  height: 380px;
+}
+/* abstract circuit art */
+.about-visual svg { width: 100%; height: 100%; }
+
+.about-content .label {
+  font-family: var(--font-code);
+  font-size: .7rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--clr-accent);
+  margin-bottom: 1rem;
+}
+.about-content h2 {
+  font-family: var(--font-head);
+  font-size: 2.55rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  line-height: 1.15;
+  margin-bottom: 1.4rem;
+}
+.about-content p {
+  color: var(--clr-text-dim);
+  font-size: .95rem;
+  font-weight: 300;
+  margin-bottom: 1rem;
+}
+.about-stats {
+  display: flex; gap: 2.8rem;
+  margin-top: 2.4rem;
+}
+.stat-val {
+  font-family: var(--font-head);
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--clr-white);
+}
+.trust-accent { color: var(--kc-orange); }
+
+.about-stats { align-items: flex-end; }
+.about-stats > div { display: flex; flex-direction: column; }
+
+.stat-val { line-height: 1; display: inline-flex; align-items: flex-end; }
+.infinity { font-size: 2.15rem; line-height: 1; position: relative; top: .12em; }
+.stat-val span { color: var(--clr-accent); }
+.stat-val.stat-label {
+  font-size: .73rem;
+  color: var(--clr-text-dim);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-top: .2rem;
+}
+
+/* ─── BENEFITS ─── */
+.benefits { padding: 7rem 2rem; }
+.benefits-inner { max-width: 1180px; margin: 0 auto; }
+
+.section-header { text-align: center; margin-bottom: 4.2rem; }
+.section-header .label {
+  font-family: var(--font-code);
+  font-size: .7rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--kc-navy);
+  margin-bottom: 1rem;
+  display: block;
+}
+.section-header h2 {
+  font-family: var(--font-head);
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  line-height: 1.15;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.3rem;
+}
+.benefit-card {
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: 14px;
+  padding: 2.2rem 1.8rem;
+  transition: border-color .35s, transform .3s, box-shadow .3s;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(1,51,103,0.05);
+}
+.benefit-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--clr-accent), transparent);
+  opacity: 0;
+  transition: opacity .4s;
+}
+.benefit-card:hover::before { opacity: 1; }
+.benefit-card:hover {
+  border-color: rgba(235,98,35,.25);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 50px rgba(1,51,103,.08);
+}
+
+.benefit-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.25rem;
+  margin-bottom: 1.3rem;
+}
+.icon-blue   { background: rgba(65,208,235,.18); }
+.icon-purple { background: rgba(182,135,172,.18); } /* from palette */
+.icon-green  { background: rgba(155,218,143,.22); }
+.icon-orange { background: rgba(253,171,137,.22); } /* from palette */
+.icon-pink   { background: rgba(251,130,129,.20); } /* from palette */
+.icon-cyan   { background: rgba(74,197,187,.20); }  /* from palette */
+
+.benefit-card h3 {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  margin-bottom: .6rem;
+}
+.benefit-card h4 {
+  font-family: var(--font-head);
+  font-size: 0.800rem;
+  font-weight: 500;
+  color: var(--clr-white);
+  margin-bottom: .6rem;
+}
+.benefit-card p {
+  font-size: .84rem;
+  color: var(--clr-text-dim);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* ─── SERVICES PIPELINE ─── */
+.pipeline { padding: 7rem 2rem; }
+.pipeline-inner { max-width: 900px; margin: 0 auto; }
+
+.pipeline-track {
+  position: relative;
+  padding-left: 3rem;
+}
+.pipeline-track::before {
+  content: '';
+  position: absolute; left: 14px; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--clr-accent), var(--clr-accent2), var(--clr-accent3));
+  border-radius: 2px;
+}
+
+.pipe-step {
+  position: relative;
+  margin-bottom: 2.8rem;
+  padding: 1.8rem 2rem;
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(1,51,103,0.05);
+  transition: border-color .35s, box-shadow .35s, transform .25s;
+}
+.pipe-step:hover { 
+  border-color: rgba(65,208,235,.35); 
+  box-shadow: 0 10px 28px rgba(1,51,103,0.08);
+  transform: translateY(-2px);
+}
+
+.pipe-dot {
+  position: absolute;
+  left: -2.38rem; top: 2.1rem;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  border: 2px solid var(--clr-bg);
+  box-shadow: 0 0 10px currentColor;
+}
+.dot-1 { color: var(--clr-accent);  background: var(--clr-accent); }
+.dot-2 { color: var(--clr-accent2); background: var(--clr-accent2); }
+.dot-3 { color: var(--clr-accent3); background: var(--clr-accent3); }
+.dot-4 { color: var(--kc-gold);     background: var(--kc-gold); }
+.dot-5 { color: var(--kc-red);      background: var(--kc-red); }
+
+.pipe-step .step-num {
+  font-family: var(--font-code);
+  font-size: .65rem;
+  color: var(--clr-text-dim);
+  letter-spacing: .2em;
+  margin-bottom: .4rem;
+}
+.pipe-step h3 {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  margin-bottom: .4rem;
+}
+.pipe-step p {
+  font-size: .85rem;
+  color: var(--clr-text-dim);
+  font-weight: 300;
+}
+.pipe-tags {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  margin-top: .9rem;
+}
+.pipe-tag {
+  font-family: var(--font-code);
+  font-size: .68rem;
+  padding: .28rem .7rem;
+  border-radius: 20px;
+  border: 1px solid var(--clr-border);
+  color: var(--clr-text-dim);
+  letter-spacing: .06em;
+}
+
+/* ─── CTA BAND ─── */
+.cta-band {
+  margin: 2rem auto;
+  max-width: 1180px;
+  padding: 0 2rem;
+}
+.cta-box {
+  background: linear-gradient(135deg, rgba(235,98,35,.08), rgba(65,208,235,.08));
+  border: 1px solid rgba(1,51,103,.12);
+  border-radius: 22px;
+  padding: 5rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(1,51,103,0.06);
+}
+.cta-box::before {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(65,208,235,.14), transparent 70%);
+  pointer-events: none;
+}
+.cta-box .label {
+  font-family: var(--font-code);
+  font-size: .7rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--kc-navy);
+  margin-bottom: 1rem;
+  display: block;
+}
+.cta-box h2 {
+  font-family: var(--font-head);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  margin-bottom: 1rem;
+}
+.cta-box p {
+  color: var(--clr-text-dim);
+  font-weight: 300;
+  max-width: 520px;
+  margin: 0 auto 2.2rem;
+}
+.cta-box .btn-primary { font-size: .85rem; padding: .9rem 2.4rem; }
+
+/* ─── FOOTER ─── */
+footer {
+  margin-top: 4rem;
+  padding: 3.5rem 2rem 2rem;
+  border-top: 1px solid var(--clr-border);
+  background: rgba(255,255,255,0.92);
+}
+.footer-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 1rem;
+}
+.footer-logo {
+  display: flex;
+  align-items: center;
+}
+.footer-logo img {
+  height: 42px; /* increased */
+  width: auto;
+  opacity: .92;
+  filter: drop-shadow(0 6px 16px rgba(1,51,103,0.10));
+}
+.footer-copy {
+  font-size: .73rem;
+  color: var(--clr-text-dim);
+  font-family: var(--font-code);
+}
+.footer-links {
+  display: flex; gap: 1.6rem;
+  list-style: none;
+}
+.footer-links a {
+  color: var(--clr-white);
+  text-decoration: none;
+  font-size: .78rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  transition: color .3s;
+}
+.footer-links a:hover { color: var(--clr-accent); }
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp   { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeDown { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse    { 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+
+/* ─── SCROLL REVEAL ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ─── BLOG SECTION ─── */
+.blog {
+  padding: 7rem 2rem;
+  background: linear-gradient(180deg, var(--clr-bg) 0%, rgba(65,208,235,.06) 100%);
+}
+.blog-inner { max-width: 1180px; margin: 0 auto; }
+
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.8rem;
+}
+
+.blog-card {
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color .35s, transform .3s, box-shadow .3s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  box-shadow: 0 1px 3px rgba(1,51,103,0.05);
+}
+.blog-card:hover {
+  border-color: rgba(235,98,35,.25);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 50px rgba(1,51,103,.10);
+}
+
+.blog-thumb {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, rgba(235,98,35,.10), rgba(65,208,235,.10));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.blog-content {
+  padding: 1.8rem 1.6rem 2rem;
+}
+
+.blog-meta {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: .8rem;
+}
+
+.blog-tag {
+  font-family: var(--font-code);
+  font-size: .65rem;
+  padding: .25rem .65rem;
+  border-radius: 6px;
+  background: rgba(235,98,35,.10);
+  color: var(--clr-accent);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.blog-date {
+  font-family: var(--font-code);
+  font-size: .68rem;
+  color: var(--clr-text-dim);
+  letter-spacing: .06em;
+}
+
+.blog-card h3 {
+  font-family: var(--font-head);
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  line-height: 1.3;
+  margin-bottom: .6rem;
+}
+
+.blog-card p {
+  font-size: .84rem;
+  color: var(--clr-text-dim);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.blog-read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin-top: 1rem;
+  font-size: .76rem;
+  font-weight: 700;
+  color: var(--clr-accent);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+
+
+/* ─── BLOG MODAL ─── */
+.blog-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1,51,103,.55);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s;
+}
+.blog-modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.blog-modal-container {
+  width: 92%;
+  max-width: 860px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  transform: scale(.92);
+  transition: transform .4s;
+}
+.blog-modal.active .blog-modal-container { transform: scale(1); }
+
+.blog-modal-header {
+  background: linear-gradient(135deg, rgba(235,98,35,.10), rgba(65,208,235,.08));
+  border-bottom: 1px solid var(--clr-border);
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.blog-modal-title {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--clr-white);
+  letter-spacing: .02em;
+}
+
+.blog-modal-close {
+  background: none;
+  border: none;
+  color: var(--clr-text-dim);
+  font-size: 1.4rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background .3s, color .3s;
+}
+.blog-modal-close:hover {
+  background: rgba(235,98,35,.08);
+  color: var(--clr-white);
+}
+
+.blog-modal-body {
+  padding: 2rem 1.8rem;
+  max-height: min(74vh, 720px);
+  overflow-y: auto;
+}
+
+/* Blog post content styling inside modal (lightweight, uses existing tokens) */
+.blog-post-meta {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin-bottom: 1rem;
+}
+.blog-post-title {
+  font-family: var(--font-head);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--clr-white);
+  line-height: 1.15;
+  margin: .25rem 0 1rem;
+}
+.blog-post-body {
+  color: var(--clr-text-dim);
+  font-weight: 300;
+  font-size: .95rem;
+  line-height: 1.8;
+}
+.blog-post-body p { margin-bottom: 1rem; }
+.blog-post-body h4 {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--clr-white);
+  margin: 1.35rem 0 .7rem;
+}
+.blog-post-body ul {
+  padding-left: 1.2rem;
+  margin: .8rem 0 1.1rem;
+}
+.blog-post-body li { margin: .4rem 0; }
+
+
+/* ─── CHAT WIZARD MODAL ─── */
+.chat-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1,51,103,.55);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s;
+}
+.chat-modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.chat-container {
+  width: 90%;
+  max-width: 520px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  transform: scale(.92);
+  transition: transform .4s;
+}
+.chat-modal.active .chat-container {
+  transform: scale(1);
+}
+
+.chat-header {
+  background: linear-gradient(135deg, rgba(235,98,35,.10), rgba(65,208,235,.08));
+  border-bottom: 1px solid var(--clr-border);
+  padding: 1.5rem 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-header h3 {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--clr-white);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.chat-close {
+  background: none;
+  border: none;
+  color: var(--clr-text-dim);
+  font-size: 1.4rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background .3s, color .3s;
+}
+.chat-close:hover {
+  background: rgba(235,98,35,.08);
+  color: var(--clr-white);
+}
+
+.chat-body {
+  padding: 2rem 1.8rem;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.chat-step {
+  display: none;
+}
+.chat-step.active {
+  display: block;
+  animation: fadeUp .5s both;
+}
+
+.chat-step h4 {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--clr-white);
+  margin-bottom: 1.2rem;
+}
+
+.chat-options {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+
+.chat-option {
+  padding: 1rem 1.3rem;
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  color: var(--clr-text);
+  font-size: .88rem;
+  cursor: pointer;
+  transition: border-color .3s, background .3s, transform .2s;
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+}
+.chat-option:hover {
+  border-color: rgba(235,98,35,.30);
+  background: rgba(235,98,35,.04);
+  transform: translateX(4px);
+}
+
+.chat-option .emoji {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.chat-input-group {
+  margin-bottom: 1rem;
+}
+
+.chat-input-group label {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--clr-text);
+  margin-bottom: .5rem;
+  letter-spacing: .06em;
+}
+
+.chat-input {
+  width: 100%;
+  padding: .85rem 1.1rem;
+  background: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  color: var(--clr-white);
+  font-family: var(--font-body);
+  font-size: .88rem;
+  transition: border-color .3s, background .3s;
+}
+.chat-input:focus {
+  outline: none;
+  border-color: rgba(65,208,235,.50);
+  background: rgba(65,208,235,.04);
+}
+
+.chat-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.chat-actions {
+  display: flex;
+  gap: .8rem;
+  margin-top: 1.5rem;
+}
+
+.chat-btn {
+  flex: 1;
+  padding: .75rem 1.5rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: .82rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .3s;
+}
+
+.chat-btn-primary {
+  background: linear-gradient(135deg, var(--clr-accent), var(--kc-navy));
+  color: #fff;
+  border: none;
+  box-shadow: 0 10px 26px rgba(1,51,103,.18);
+}
+.chat-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(1,51,103,.22);
+}
+.chat-btn-primary:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.chat-btn-secondary {
+  background: transparent;
+  color: var(--clr-text-dim);
+}
+.chat-btn-secondary:hover {
+  border-color: rgba(235,98,35,.30);
+  color: var(--clr-accent);
+}
+
+.chat-summary {
+  background: rgba(155,218,143,.10);
+  border: 1px solid rgba(155,218,143,.25);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.chat-summary h5 {
+  font-family: var(--font-head);
+  font-size: .95rem;
+  font-weight: 900;
+  color: var(--kc-navy);
+  margin-bottom: 1rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.chat-summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: .5rem 0;
+  font-size: .82rem;
+  border-bottom: 1px solid rgba(1,51,103,0.08);
+}
+.chat-summary-item:last-child {
+  border-bottom: none;
+}
+
+.chat-summary-label {
+  color: var(--clr-text-dim);
+  font-weight: 600;
+}
+
+.chat-summary-value {
+  color: var(--clr-white);
+  font-weight: 800;
+}
+
+.chat-success {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.chat-success .success-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.chat-success h4 {
+  font-family: var(--font-head);
+  font-size: 1.3rem;
+  color: var(--clr-white);
+  margin-bottom: .8rem;
+}
+
+.chat-success p {
+  color: var(--clr-text-dim);
+  font-size: .9rem;
+  margin-bottom: 1.5rem;
+}
+
+
+/* ─── CONTACT MODAL ─── */
+.contact-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1,51,103,.55);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s;
+}
+.contact-modal.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.contact-container {
+  width: 92%;
+  max-width: 620px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  transform: scale(.92);
+  transition: transform .4s;
+}
+.contact-modal.active .contact-container { transform: scale(1); }
+
+.contact-header {
+  background: linear-gradient(135deg, rgba(235,98,35,.10), rgba(65,208,235,.08));
+  border-bottom: 1px solid var(--clr-border);
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.contact-header h3 {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--clr-white);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.contact-close {
+  background: none;
+  border: none;
+  color: var(--clr-text-dim);
+  font-size: 1.4rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background .3s, color .3s;
+}
+.contact-close:hover {
+  background: rgba(235,98,35,.08);
+  color: var(--clr-white);
+}
+
+.contact-body {
+  padding: 1.7rem 1.6rem 1.9rem;
+}
+
+.contact-hint {
+  font-size: .85rem;
+  color: var(--clr-text-dim);
+  font-weight: 300;
+  margin-bottom: 1.2rem;
+}
+
+.contact-to {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 12px;
+  background: rgba(1,51,103,0.02);
+  margin-bottom: 1.2rem;
+}
+
+.contact-to .to-label {
+  font-family: var(--font-code);
+  font-size: .68rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--clr-text-dim);
+}
+
+.contact-to .to-value {
+  font-family: var(--font-code);
+  font-size: .85rem;
+  color: var(--kc-navy);
+  font-weight: 700;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .9rem;
+  margin-bottom: .9rem;
+}
+
+@media (max-width: 640px) {
+  .contact-grid { grid-template-columns: 1fr; }
+}
+
+.contact-actions {
+  display: flex;
+  gap: .8rem;
+  margin-top: 1.1rem;
+}
+
+.contact-actions .chat-btn { flex: 1; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .about { grid-template-columns: 1fr; gap: 2.5rem; }
+  .about-visual { height: 240px; }
+  .benefits-grid { grid-template-columns: 1fr 1fr; }
+  .blog-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  nav { padding: 1rem 1.2rem; }
+  .nav-links { gap: 1.2rem; }
+  .nav-links a, .nav-cta { font-size: .7rem; }
+  .benefits-grid { grid-template-columns: 1fr; }
+  .blog-grid { grid-template-columns: 1fr; }
+  .hero-actions { flex-direction: column; align-items: center; }
+  .hero-partners { gap: .9rem; }
+  .about-stats { gap: 1.5rem; }
+  .chat-container { width: 95%; }
+  .chat-body { max-height: 400px; }
+
+  .nav-logo img { height: 52px; }
+  nav.scrolled .nav-logo img { height: 48px; }
+  .partner-logo { height: 30px; }
+}
+
+/* ─── PEOPLE ─── */
+.people {
+  padding: 7rem 2rem;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.people .section-header h2 { margin-bottom: 0.6rem; }
+.people-intro {
+  max-width: 920px;
+  margin: 0 auto 2.6rem;
+  text-align: center;
+  color: var(--clr-text);
+}
+.people-intro p {
+  font-size: 1.02rem;
+  line-height: 1.75;
+  color: rgba(28,35,37,.86);
+  margin-top: .8rem;
+}
+.people-highlights .benefit-card h3 { font-size: 1.15rem; }
+.people-highlights .benefit-card p { margin-top: .6rem; }
+
+.people-join {
+  margin-top: 3.2rem;
+}
+.people-join-card {
+  border: 1px solid var(--clr-border);
+  border-radius: 18px;
+  padding: 2.1rem 1.9rem;
+  background: linear-gradient(135deg, rgba(235,98,35,.08), rgba(65,208,235,.06));
+  box-shadow: 0 10px 40px rgba(1,51,103,.06);
+}
+.people-join-card h3 {
+  font-family: var(--font-head);
+  font-size: 1.9rem;
+  line-height: 1.15;
+  color: var(--kc-navy);
+  margin-top: .5rem;
+}
+.people-join-card p {
+  color: rgba(28,35,37,.86);
+  margin-top: .75rem;
+  line-height: 1.75;
+  max-width: 860px;
+}
+.people-form {
+  margin-top: 1.4rem;
+}
+.people-form .chat-input {
+  width: 100%;
+}
+.people-form .file-row {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+.people-form .file-hint {
+  font-size: .82rem;
+  color: var(--clr-text-dim);
+}
+.people-form .btn-row {
+  display: flex;
+  gap: .9rem;
+  margin-top: 1.1rem;
+}
+.people-form .btn-row .btn-primary { flex: 1; }
+.people-form .btn-row .btn-ghost { flex: 1; }
+
+@media (max-width: 900px) {
+  .people { padding: 6rem 1.4rem; }
+}
+
+
+
+
+/* ─── PEOPLE: HERO LAYOUT (IMAGE + COPY SIDE-BY-SIDE) ─── */
+.people-hero{
+  max-width: 1020px;
+  margin: 0 auto 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4rem;
+}
+
+/* Create a consistent "box" for the image, and let the image fill it. */
+.people-hero-media{
+  background: linear-gradient(135deg, rgba(235,98,35,.08), rgba(65,208,235,.08));
+  flex: 0 0 54%;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.people-hero-img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* fills the box without distortion */
+  object-position: center;    /* keeps the crop centered */
+  border-radius: 14px;
+  border: 1px solid var(--clr-border);
+  box-shadow: 0 10px 36px rgba(1,51,103,.08);
+}
+
+.people-hero-copy{
+  flex: 1;
+  text-align: left;
+  color: var(--clr-text);
+}
+.people-hero-copy p{
+  font-size: 1.02rem;
+  line-height: 1.75;
+  color: rgba(28,35,37,.86);
+  margin-top: .8rem;
+}
+.people-hero-copy p:first-child{ margin-top: 0; }
+
+@media (max-width: 900px){
+  .people-hero{
+    flex-direction: column;
+    gap: 1.4rem;
+    text-align: center;
+  }
+  .people-hero-media{ flex-basis: auto; width: min(860px, 100%); }
+  .people-hero-copy{ text-align: center; }
+}
+
+/* ─── PEOPLE: JOIN LABEL COMPACT ─── */
+.people-join-card .join-label{
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .34rem .8rem;
+  border: 1px solid rgba(1,51,103,0.12);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.70);
+  color: var(--kc-navy);
+  font-size: .62rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+/* ─── PEOPLE QUOTE ─── */
+.people-quote {
+  display: flex;
+  justify-content: center;
+  margin: 2.2rem 0 2.8rem;
+}
+.people-quote figure {
+  width: min(980px, 100%);
+  border: 1px solid var(--clr-border);
+  border-radius: 18px;
+  padding: 2.2rem 2rem;
+  background: radial-gradient(1200px 420px at 30% 20%, rgba(65,208,235,.10), transparent 55%),
+              radial-gradient(900px 360px at 80% 80%, rgba(235,98,35,.10), transparent 55%),
+              linear-gradient(135deg, rgba(1,51,103,.05), rgba(255,255,255,.65));
+  box-shadow: 0 12px 50px rgba(1,51,103,.08);
+  text-align: center;
+}
+.people-quote .quote-mark {
+  font-size: 2.8rem;
+  line-height: 1;
+  color: rgba(235,98,35,.9);
+}
+.people-quote blockquote {
+  margin: .9rem auto 0;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: clamp(1.25rem, 2.2vw, 2.05rem);
+  line-height: 1.25;
+  color: var(--kc-navy);
+}
+.people-quote figcaption {
+  margin-top: .9rem;
+  color: rgba(28,35,37,.78);
+  font-size: .95rem;
+}
+
+
+.people-quote-img {
+  display: block;
+  width: min(860px, 100%);
+  height: auto;
+  margin: 0 auto;
+  border-radius: 14px;
+}
+
+
+/* ─── JOIN OUR TEAM LINK + MODAL ─── */
+.join-team-link{
+  color: var(--kc-orange);
+  font-weight: 800;
+  text-decoration: none;
+  border-bottom: 2px solid rgba(235,98,35,0.30);
+  padding-bottom: 1px;
+  transition: color .25s, border-color .25s, background .25s;
+}
+.join-team-link:hover{
+  color: var(--kc-navy);
+  border-color: rgba(1,51,103,0.28);
+  background: rgba(235,98,35,0.06);
+}
+
+.join-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 2150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1,51,103,.55);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s;
+}
+.join-modal.active{
+  opacity: 1;
+  pointer-events: all;
+}
+
+.join-container{
+  width: 92%;
+  max-width: 680px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  transform: scale(.92);
+  transition: transform .4s;
+}
+.join-modal.active .join-container{ transform: scale(1); }
+
+.join-header{
+  background: linear-gradient(135deg, rgba(235,98,35,.10), rgba(65,208,235,.08));
+  border-bottom: 1px solid var(--clr-border);
+  padding: 1.4rem 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.join-header h3{
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--clr-white);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.join-close{
+  background: none;
+  border: none;
+  color: var(--clr-text-dim);
+  font-size: 1.4rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background .3s, color .3s;
+}
+.join-close:hover{
+  background: rgba(235,98,35,.08);
+  color: var(--clr-white);
+}
+
+.join-body{ padding: 1.7rem 1.6rem 1.9rem; }
+.join-hint{
+  font-size: .90rem;
+  color: var(--clr-text-dim);
+  font-weight: 300;
+  margin-bottom: 1.2rem;
+}
+.join-actions{
+  display: flex;
+  gap: .8rem;
+  margin-top: 1.1rem;
+}
+.join-actions .btn-primary{ flex: 1; }
+.join-actions .btn-ghost{ flex: 1; }
+
+@media (max-width: 640px){
+  .join-actions{ flex-direction: column; }
+}
+
+
+/* ─── MOBILE NAV (ADAPTIVE WITHOUT CHANGING LOOK & FEEL) ─── */
+section { scroll-margin-top: 96px; }
+
+/* Hamburger */
+.nav-toggle{
+  display: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(1,51,103,0.12);
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(12px) saturate(1.3);
+  box-shadow: 0 10px 26px rgba(1,51,103,0.08);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px;
+  transition: transform .18s, box-shadow .25s, border-color .25s;
+}
+.nav-toggle:hover{
+  transform: translateY(-1px);
+  border-color: rgba(235,98,35,0.35);
+  box-shadow: 0 14px 36px rgba(1,51,103,0.12);
+}
+.nav-toggle span{
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--kc-navy);
+  border-radius: 999px;
+  transition: transform .22s, opacity .18s;
+}
+
+/* Backdrop behind the menu (tap to close) */
+.nav-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(1,51,103,0.10);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+body.nav-open .nav-overlay{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Menu open state */
+body.nav-open { overflow: hidden; }
+body.nav-open .nav-toggle span:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+body.nav-open .nav-toggle span:nth-child(2){ opacity: 0; }
+body.nav-open .nav-toggle span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 820px){
+  nav{
+    padding: 1rem 1.2rem;
+  }
+  nav.scrolled{
+    padding: .85rem 1.2rem;
+  }
+  .nav-toggle{ display: inline-flex; }
+
+  /* Convert nav links to a mobile panel */
+  .nav-links{
+    position: fixed;
+    top: calc(var(--nav-h, 72px) + 10px);
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    padding: .65rem;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid rgba(1,51,103,0.12);
+    border-radius: 18px;
+    box-shadow: 0 18px 60px rgba(1,51,103,0.16);
+    transform: translateY(-10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .22s, opacity .22s;
+    z-index: 110;
+  }
+  body.nav-open .nav-links{
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .nav-links li{ width: 100%; }
+  .nav-links a{
+    width: 100%;
+    justify-content: space-between;
+    padding: .92rem 1rem;
+    font-size: .78rem;
+    letter-spacing: .12em;
+    border-radius: 14px;
+  }
+  .nav-links a::after{ display:none; }
+  .nav-links a:hover{ background: rgba(235,98,35,0.06); }
+
+  /* CTA remains visually prominent */
+  .nav-links a.nav-cta{
+    margin-top: .15rem;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px){
+  .nav-logo img{ height: 48px; }
+  nav.scrolled .nav-logo img{ height: 44px; }
+  section { scroll-margin-top: 88px; }
+}
+
+/* ─── SMALL-SCREEN TYPOGRAPHY & LAYOUT TUNING ─── */
+@media (max-width: 600px){
+  .hero{ padding: 5.2rem 1.1rem 3.2rem; min-height: 94vh; }
+  .hero-sub{ font-size: 1rem; }
+  .hero-panel p{ font-size: .92rem; }
+  .pipeline-track{ padding-left: 2.2rem; }
+  .pipe-dot{ left: -1.9rem; }
+  .pipe-step{ padding: 1.6rem 1.35rem; }
+  .cta-box{ padding: 3.6rem 1.5rem; }
+  .footer-inner{ flex-direction: column; align-items: flex-start; gap: 1.2rem; }
+  .footer-links{ flex-wrap: wrap; gap: 1.1rem; }
+}
+
+/* Respect safe-area insets on modern phones */
+@supports (padding: max(0px)){
+  nav{
+    padding-left: max(1.2rem, env(safe-area-inset-left));
+    padding-right: max(1.2rem, env(safe-area-inset-right));
+  }
+  .hero, .partners, .about, .benefits, .pipeline, .blog, .people, footer, .cta-band{
+    padding-left: max(1.1rem, env(safe-area-inset-left));
+    padding-right: max(1.1rem, env(safe-area-inset-right));
+  }
+}
+
+</style>
 </head>
 <body>
-    <h1>Test Page</h1>
-    <p>This is a basic HTML test page. If you can see this, everything is working correctly.</p>
-    <p>Last updated: March 2, 2026 — Auto-deploy test.</p>
+
+<!-- animated particle / grid canvas -->
+<canvas id="bgCanvas"></canvas>
+
+<!-- ── NAV ── -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <img src="https://img1.wsimg.com/isteam/ip/4e498c06-ddd9-4421-844c-cbc70ac9d132/onlinelogomaker-010722-1231-3621.png/:/rs=h:100,cg:true,m/qt=q:100/ll" alt="KANTHERI Consulting" />
+  </a>
+  <button class="nav-toggle" id="navToggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="navMenu">
+    <li><a href="#about">About</a></li>
+    <li><a href="#benefits">Benefits</a></li>
+    <li><a href="#pipeline">Services</a></li>
+	<li><a href="#blog">Blog</a></li>
+    <li><a href="#people">Team</a></li>    
+    <li><a href="#contact" class="nav-cta">Contact</a></li>
+  </ul>
+</nav>
+<div class="nav-overlay" id="navOverlay" aria-hidden="true"></div>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <button class="hero-nav hero-nav-prev is-hidden" type="button" aria-label="Previous hero">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="hero-nav hero-nav-next" type="button" aria-label="Next hero">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+<div class="hero-carousel" id="heroCarousel" aria-label="KC hero highlights (horizontal)">
+
+    <!-- Slide 1: Existing HERO -->
+<!--     <div class="hero-slide" data-hero-slide="1">
+      <div class="hero-slide-inner">
+        <div class="hero-badge">
+    <span class="dot"></span>
+    Modern Data Analytics Solutions Specialists · AU / NZ
+  </div>
+  <h1>Data Engineering,<br><span class="grad">Reimagined.</span></h1>
+  <p class="hero-sub">Pioneering modern lakehouse architectures that turn raw data chaos into scalable, trusted intelligence — faster than ever before.</p>
+  <div class="hero-actions">
+    <button onclick="openChatWizard()" class="btn-primary">Start the Conversation ↗</button>
+    <a href="#about" class="btn-ghost">Explore ↓</a>
+  </div>
+
+
+  <div class="hero-partners" aria-label="Trusted partners">
+    <div class="trust-band">
+      <span class="trust-label">Trusted Partners</span>
+      <div class="partner-logos">
+        <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/microsoft.svg" alt="Microsoft" />
+        <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/databricks.svg" alt="Databricks" />
+      </div>
+
+      <noscript>
+        <div class="partner-pill">Microsoft</div>
+        <div class="partner-pill">Databricks</div>
+      </noscript>
+    </div>
+  </div>
+        <div class="hero-scroll-hint" aria-hidden="true">
+          <span class="arrow">→</span> Scroll for more
+        </div>
+      </div>
+    </div> -->
+    <div class="hero-slide" data-hero-slide="1">
+      <div class="hero-slide-inner">
+                <div class="hero-badge">
+					<span class="dot"></span>The Moat Isn’t the Model.
+				</div>
+        <!--<div class="hero-panel reveal">-->
+          <h2>AI That Runs on Your Data.<br> <span class="grad">And Runs Your Business</span>.</h2>
+          <p class="hero-sub">KC designs AI-native lakehouse platforms where intelligence is embedded, governed, and operationalised at scale. <br/>We don’t bolt on AI. We engineer AI-native data platforms. </p>
+          <div class="hero-micro">
+            <span class="hero-chip">Operational AI</span><span class="hero-chip">Trusted Intelligence</span><span class="hero-chip">Data-First AI</span><span class="hero-chip">Decision Automation</span>
+          </div>
+          <div class="hero-actions">
+            <button onclick="openChatWizard()" class="btn-primary">Start the Conversation ↗</button>
+            <a href="#pipeline" class="btn-ghost">See how we deliver ↓</a>
+          </div>
+        <!--</div>-->
+	  <!-- Partner trust band (more visible) -->
+	  <!-- <div class="hero-partners" aria-label="Trusted partners"> -->
+		<!-- <div class="trust-band"> -->
+		  <!-- <span class="trust-label">Trusted Partners</span> -->
+		  <!-- <div class="partner-logos"> -->
+			<!-- <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/microsoft.svg" alt="Microsoft" /> -->
+			<!-- <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/databricks.svg" alt="Databricks" /> -->
+		  <!-- </div> -->
+		  <!-- <noscript> -->
+			<!-- <div class="partner-pill">Microsoft</div> -->
+			<!-- <div class="partner-pill">Databricks</div> -->
+		  <!-- </noscript> -->
+		<!-- </div> -->
+	  <!-- </div>		 -->
+        <!-- <div class="hero-scroll-hint" aria-hidden="true"> -->
+          <!-- <span class="arrow">→</span> -->
+        <!-- </div> -->
+      </div>
+    </div>
+	
+    <!-- Slide 2: Punchy KC POV -->
+    <div class="hero-slide" data-hero-slide="2">
+      <div class="hero-slide-inner">
+                <div class="hero-badge">
+					<span class="dot"></span>No drama. No delays. No disruption.
+				</div>
+        <!--<div class="hero-panel reveal">-->
+          <h2>Modern data platforms,<br> <span class="grad">No Big Deal</span>.</h2>
+          <p class="hero-sub">With proven expertise and disciplined delivery, we make platform modernisation predictable, fast, and cost-effective.<br/>
+Not because it’s easy—but because <b>we know exactly how to do it.</b></p>
+          <div class="hero-micro">
+            <span class="hero-chip">Faster Business Impact</span><span class="hero-chip">Predictable Delivery</span><span class="hero-chip">Confidence at Scale</span><span class="hero-chip">Decisions Powered by Data</span>
+          </div>
+          <div class="hero-actions">
+            <button onclick="openChatWizard()" class="btn-primary">Start the Conversation ↗</button>
+            <a href="#pipeline" class="btn-ghost">See how we deliver ↓</a>
+          </div>
+        <!--</div>-->
+	  <!-- Partner trust band (more visible) -->
+	  <!-- <div class="hero-partners" aria-label="Trusted partners"> -->
+		<!-- <div class="trust-band"> -->
+		  <!-- <span class="trust-label">Trusted Partners</span> -->
+		  <!-- <div class="partner-logos"> -->
+			<!-- <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/microsoft.svg" alt="Microsoft" /> -->
+			<!-- <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/databricks.svg" alt="Databricks" /> -->
+		  <!-- </div> -->
+		  <!-- <noscript> -->
+			<!-- <div class="partner-pill">Microsoft</div> -->
+			<!-- <div class="partner-pill">Databricks</div> -->
+		  <!-- </noscript> -->
+		<!-- </div> -->
+	  <!-- </div>		 -->
+        <!-- <div class="hero-scroll-hint" aria-hidden="true"> -->
+          <!-- <span class="arrow">→</span> -->
+        <!-- </div> -->
+      </div>
+    </div>
+
+    <!-- Slide 2: Punchy KC POV -->
+    <div class="hero-slide" data-hero-slide="3">
+      <div class="hero-slide-inner">
+                <div class="hero-badge">
+					<span class="dot"></span>Knowledge. Care. Trust.
+				</div>
+        <!--<div class="hero-panel reveal">-->
+          <h2>Actionable Governance,<br> <span class="grad">Enterprise Trust</span>.</h2>
+          <p class="hero-sub">We operationalise data governance inside modern data platforms—  
+				making data discoverable, protected, and decision-ready by design.<br/>
+				<b>Trust, delivered as a platform capability.</b></p>
+          <div class="hero-micro">
+            <span class="hero-chip">Metadata, Lineage & Discovery</span><span class="hero-chip">PII & Access Control</span><span class="hero-chip">Quality, Certification & Endorsement</span><span class="hero-chip">Federated, Self-service</span>
+          </div>
+          <div class="hero-actions">
+            <button onclick="openChatWizard()" class="btn-primary">Start the Conversation ↗</button>
+            <a href="#pipeline" class="btn-ghost">See how we deliver ↓</a>
+          </div>
+        <!--</div>-->
+	  <!-- Partner trust band (more visible) -->
+	  <!-- <div class="hero-partners" aria-label="Trusted partners"> -->
+		<!-- <div class="trust-band"> -->
+		  <!-- <span class="trust-label">Trusted Partners</span> -->
+		  <!-- <div class="partner-logos"> -->
+			<!-- <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/microsoft.svg" alt="Microsoft" /> -->
+			<!-- <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/databricks.svg" alt="Databricks" /> -->
+		  <!-- </div> -->
+		  <!-- <noscript> -->
+			<!-- <div class="partner-pill">Microsoft</div> -->
+			<!-- <div class="partner-pill">Databricks</div> -->
+		  <!-- </noscript> -->
+		<!-- </div> -->
+	  <!-- </div>		 -->
+        <!-- <div class="hero-scroll-hint" aria-hidden="true"> -->
+          <!-- <span class="arrow">←</span> -->
+        <!-- </div> -->
+      </div>
+    </div>
+	
+  </div>
+</section>
+
+<!-- ── PARTNERS ── -->
+<section class="partners" id="partners" aria-label="Trusted partners">
+  <div class="partners-inner">
+    <span class="partners-kicker">// Trusted Partners</span>
+    <div class="hero-partners" style="position: static; margin-top: 0;">
+      <div class="trust-band">
+        <span class="trust-label">Trusted Partners</span>
+        <div class="partner-logos">
+          <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/microsoft.svg" alt="Microsoft" />
+          <img class="partner-logo" src="https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/databricks.svg" alt="Databricks" />
+        </div>
+        <noscript>
+          <div class="partner-pill">Microsoft</div>
+          <div class="partner-pill">Databricks</div>
+        </noscript>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── ABOUT ── -->
+<section class="about" id="about">
+  <!-- abstract SVG circuit art -->
+  <div class="about-visual reveal">
+    <svg viewBox="0 0 420 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- grid lines -->
+      <line x1="0" y1="60" x2="420" y2="60" stroke="#41D0EB" stroke-opacity=".10" />
+      <line x1="0" y1="120" x2="420" y2="120" stroke="#41D0EB" stroke-opacity=".10" />
+      <line x1="0" y1="180" x2="420" y2="180" stroke="#41D0EB" stroke-opacity=".10" />
+      <line x1="0" y1="240" x2="420" y2="240" stroke="#41D0EB" stroke-opacity=".10" />
+      <line x1="0" y1="300" x2="420" y2="300" stroke="#41D0EB" stroke-opacity=".10" />
+      <line x1="60" y1="0" x2="60" y2="380" stroke="#41D0EB" stroke-opacity=".08" />
+      <line x1="140" y1="0" x2="140" y2="380" stroke="#41D0EB" stroke-opacity=".08" />
+      <line x1="220" y1="0" x2="220" y2="380" stroke="#41D0EB" stroke-opacity=".08" />
+      <line x1="300" y1="0" x2="300" y2="380" stroke="#41D0EB" stroke-opacity=".08" />
+      <line x1="380" y1="0" x2="380" y2="380" stroke="#41D0EB" stroke-opacity=".08" />
+
+      <!-- circuit paths -->
+      <path d="M60 180 L140 180 L140 120 L220 120" stroke="#EB6223" stroke-width="1.5" stroke-opacity=".55" fill="none" stroke-linecap="round"/>
+      <path d="M220 120 L300 120 L300 60" stroke="#41D0EB" stroke-width="1.5" stroke-opacity=".55" fill="none" stroke-linecap="round"/>
+      <path d="M60 240 L140 240 L140 300 L220 300 L220 240 L300 240" stroke="#9BDA8F" stroke-width="1.5" stroke-opacity=".50" fill="none" stroke-linecap="round"/>
+      <path d="M300 240 L380 240 L380 180 L300 180 L300 120" stroke="#D9B300" stroke-width="1" stroke-opacity=".45" fill="none" stroke-linecap="round"/>
+
+      <!-- glow nodes -->
+      <circle cx="60"  cy="180" r="5" fill="#EB6223" opacity=".85"><circle cx="60"  cy="180" r="9" fill="#EB6223" opacity=".12"/></circle>
+      <circle cx="220" cy="120" r="6" fill="#41D0EB" opacity=".85"><circle cx="220" cy="120" r="11" fill="#41D0EB" opacity=".12"/></circle>
+      <circle cx="300" cy="60"  r="4" fill="#41D0EB" opacity=".65"/>
+      <circle cx="220" cy="300" r="5" fill="#9BDA8F" opacity=".85"><circle cx="220" cy="300" r="9" fill="#9BDA8F" opacity=".12"/></circle>
+      <circle cx="300" cy="240" r="5" fill="#D9B300" opacity=".8"><circle cx="300" cy="240" r="9" fill="#D9B300" opacity=".1"/></circle>
+      <circle cx="140" cy="120" r="3" fill="#EB6223" opacity=".55"/>
+      <circle cx="140" cy="300" r="3" fill="#9BDA8F" opacity=".55"/>
+      <circle cx="380" cy="180" r="4" fill="#D9B300" opacity=".55"/>
+      <circle cx="380" cy="240" r="3" fill="#D9B300" opacity=".5"/>
+      <circle cx="60"  cy="240" r="3" fill="#9BDA8F" opacity=".5"/>
+
+      <!-- data labels -->
+      <text x="45" y="170" font-family="'DM Mono',monospace" font-size="8" fill="#EB6223" opacity=".55">src</text>
+      <text x="205" y="110" font-family="'DM Mono',monospace" font-size="8" fill="#41D0EB" opacity=".55">transform</text>
+      <text x="205" y="315" font-family="'DM Mono',monospace" font-size="8" fill="#9BDA8F" opacity=".55">serve</text>
+      <text x="285" y="230" font-family="'DM Mono',monospace" font-size="8" fill="#D9B300" opacity=".55">orchestrate</text>
+
+      <!-- central glow -->
+      <defs>
+        <radialGradient id="cGlow" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="#41D0EB" stop-opacity=".12"/>
+          <stop offset="100%" stop-color="#41D0EB" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="220" cy="190" rx="130" ry="100" fill="url(#cGlow)"/>
+    </svg>
+  </div>
+
+  <div class="about-content reveal">
+    <div class="section-header reveal">
+      <div class="label">// About Us</div>
+    <h2>Modern Data Platform Pioneers - <span class="trust-accent">Built on Trust</span></h2>
+    <p>KANTHERI Consulting (KC) helps enterprises turn data and AI into a sustained operating advantage. We pioneered lakehouse principles in Australia and New Zealand and are recognised for delivering comprehensive, enterprise-grade lakehouse platforms that scale with the business.</p>
+	<p>Building on this foundation, we design and engineer AI-native data platforms where intelligence is embedded directly into the data layer. These platforms are governed, secure, and built for day-to-day business operations. They replace fragmented analytics and experimental AI with decision-grade intelligence that supports automation, confidence, and long-term scale.</p>
+	<p>KC is trusted by CIOs, CDOs, and senior technology leaders to modernise complex data estates without disruption. Our approach is deliberately pragmatic. We align data and AI strategy to business priorities, design future-ready architectures, and execute with discipline using proven accelerators and iterative delivery. This results in predictable outcomes, faster time to value, and lower delivery risk.</p>
+    <p>We do not bolt on AI models. We engineer modern, lakehouse-based data platforms that make advanced analytics and AI reliable, repeatable, and embedded into everyday business operations. Data and AI do not just inform the business. They help run it.</p>
+	</div>
+    <div class="about-stats">
+      <div>
+        <div class="stat-val">7<span>+</span></div>
+        <div class="stat-label">Years of Excellence</div>
+      </div>
+      <div>
+        <div class="stat-val">40<span>+</span></div>
+        <div class="stat-label">Enterprise Projects</div>
+      </div>
+      <div>
+        <div class="stat-val">2</div>
+        <div class="stat-label">Global Partners</div>
+      </div>  
+      <div>
+        <div class="stat-val infinity">∞</div>
+        <div class="stat-label">Business Possibilities</div>
+      </div> 	  
+    </div>	
+		
+  </div>
+</section>
+
+<!-- ── BENEFITS ── -->
+<section class="benefits" id="benefits">
+  <div class="benefits-inner">
+    <div class="section-header reveal">
+      <div class="label">// Client Outcomes</div>
+      <h2>Why Organisations<br>Choose KC</h2>
+    </div>
+    <div class="benefits-grid">
+
+      <div class="benefit-card reveal">
+        <div class="benefit-icon icon-blue">🛡️</div>
+        <h3>Trusted Data at Enterprise Scale</h3>
+		<h4>Confidence to make decisions, not question the numbers.</h4>
+        <p>KC establishes strong data governance and control frameworks that improve data quality, consistency, and compliance. Leaders gain confidence that analytics and AI outputs are accurate, auditable, and ready for enterprise decision-making.</p>
+      </div>
+
+      <div class="benefit-card reveal">
+        <div class="benefit-icon icon-purple">📊</div>
+        <h3>Analytics That Move the Business</h3>
+		<h4>From reports to insight that drives action.</h4>
+        <p>We enable advanced analytics capabilities that go beyond dashboards. Organisations gain the skills, platforms, and operating models needed to turn data into insight that supports forecasting, optimisation, and automation.</p>
+      </div>
+
+      <div class="benefit-card reveal">
+        <div class="benefit-icon icon-green">🔄</div>
+        <h3>Resilient Platforms, Consistent Usage</h3>
+		<h4>Data that remains usable through change.</h4>
+        <p>Our platform designs decouple business logic from source systems, ensuring continuity as technologies, vendors, or data sources evolve. This protects analytics investments and drives consistent adoption across the organisation.</p>
+      </div>
+
+      <div class="benefit-card reveal">
+        <div class="benefit-icon icon-orange">💰</div>
+        <h3>Scalable Growth, Controlled Cost</h3>
+		<h4>Enterprise scale without enterprise waste.</h4>
+        <p>KC designs cloud-native data platforms that scale on demand while maintaining cost discipline. Clients reduce long-term platform and operational costs while retaining flexibility to grow as business needs change.</p>
+      </div>
+
+      <div class="benefit-card reveal">
+        <div class="benefit-icon icon-pink">⚡</div>
+        <h3>Faster Time to Value</h3>
+		<h4>Less friction, more insight, delivered sooner.</h4>
+        <p>Proven frameworks and accelerators reduce the effort required to source, prepare, and deliver data. Teams spend less time on plumbing and more time delivering insights that matter to the business.</p>
+      </div>
+
+      <div class="benefit-card reveal">
+        <div class="benefit-icon icon-cyan">🚀</div>
+        <h3>Innovation & Use-Case Expansion</h3>
+		<h4>New use cases without re-platforming.</h4>
+        <p>KC enables Federated Autonomous Self-service Environments so teams can build and scale analytics and AI independently. Innovation moves faster while governance stays intact, without disrupting core platforms or increasing risk.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── SERVICES PIPELINE ── -->
+<section class="pipeline" id="pipeline">
+  <div class="pipeline-inner">
+    <div class="section-header reveal">
+      <div class="label">// How We Work</div>
+      <h2>The KC<br>Delivery Pipeline</h2>
+    </div>
+    <div class="pipeline-track">
+
+      <div class="pipe-step reveal">
+        <div class="pipe-dot dot-1"></div>
+        <div class="step-num">01 — STRATEGY</div>
+        <h3>Data & AI Strategy, Architecture</h3>
+        <p>We establish a clear, business-aligned data and AI strategy. KC assesses your current landscape, defines outcome-driven objectives, and designs a future-ready lakehouse architecture and roadmap that supports scale, governance, and long-term value.</p>
+        <div class="pipe-tags">
+          <span class="pipe-tag">Architecture Review</span>
+          <span class="pipe-tag">Roadmap Design</span>
+          <span class="pipe-tag">Cloud and Platform Strategy</span>
+        </div>
+      </div>
+
+      <div class="pipe-step reveal">
+        <div class="pipe-dot dot-2"></div>
+        <div class="step-num">02 — BUILD</div>
+        <h3>Modern Data & AI-Native Platform Engineering</h3>
+        <p>We engineer enterprise lakehouses designed to run analytics and AI natively. Data ingestion, transformation, feature foundations, and model-ready datasets are built into the platform using proven accelerators to ensure speed, quality, and consistency.</p>
+        <div class="pipe-tags">
+          <span class="pipe-tag">Lakehouse Platforms</span>
+          <span class="pipe-tag">Platform Engineering</span>
+          <span class="pipe-tag">Embedded AI Integeration</span>
+          <span class="pipe-tag">Accelerated Delivery</span>
+        </div>
+      </div>
+
+      <div class="pipe-step reveal">
+        <div class="pipe-dot dot-3"></div>
+        <div class="step-num">03 — GOVERN</div>
+        <h3>Trust, Quality & Control by Design</h3>
+        <p>We embed operational data governance into the platform, building knowledge, care, and trust through data quality, lineage, security, and policy enforcement so analytics and AI scale safely across the enterprise.</p>
+        <div class="pipe-tags">
+          <span class="pipe-tag">Operational Data Governance</span>
+          <span class="pipe-tag">Quality Frameworks</span>
+		  <span class="pipe-tag">AI Governance</span>
+          <span class="pipe-tag">Enterprise Trust Layer</span>
+        </div>
+      </div>
+
+      <div class="pipe-step reveal">
+        <div class="pipe-dot dot-4"></div>
+        <div class="step-num">04 — OPERATIONALISE</div>
+        <h3>Analytics, AI & Decision Automation</h3>
+        <p>KC operationalises analytics and AI within business workflows. We enable self-service analytics, deploy AI-driven insights and automation, and support centralised/federated teams to build and scale use cases without fragmenting the platform.</p>
+        <div class="pipe-tags">
+          <span class="pipe-tag">Operational BI & AI</span>
+          <span class="pipe-tag">Decision Automation</span>
+          <span class="pipe-tag">Self-Service</span>
+          <span class="pipe-tag">DataOps/DevOps/DevSecOps</span>
+        </div>
+      </div>	  
+
+      <div class="pipe-step reveal">
+        <div class="pipe-dot dot-5"></div>
+        <div class="step-num">05 — SCALE</div>
+        <h3>Adoption, Enablement & Continuous Value</h3>
+        <p>We ensure data platform delivers sustained value. KC upskills teams, embeds governance-aware self-service, and continuously optimises platforms so analytics and AI evolve with the business. Turning infrastructure into organisational intelligence.</p>
+        <div class="pipe-tags">
+          <span class="pipe-tag">Enablement and Training</span>
+          <span class="pipe-tag">Adoption at Scale</span>
+          <span class="pipe-tag">Continuous Optimisation</span>
+          <span class="pipe-tag">Ongoing Support</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── BLOG ── -->
+<section class="blog" id="blog">
+  <div class="blog-inner">
+    <div class="section-header reveal">
+      <span class="label">// Insights & Expertise</span>
+      <h2>Latest from<br>Our Data Lab</h2>
+    </div>
+    <div class="blog-grid">
+
+      <a href="javascript:void(0)" class="blog-card reveal" data-blog-target="blog-post-1">
+        <div class="blog-thumb">📊</div>
+        <div class="blog-content">
+          <div class="blog-meta">
+            <span class="blog-tag">Lakehouse</span>
+            <span class="blog-date">Jun 11, 2024</span>
+          </div>
+          <h3>Building Enterprise Lakehouse</h3>
+          <p>A deep dive into the core principles that make enterprise lakehouse implementations successful, a case study.</p>
+          <div class="blog-read-more">Read More →</div>
+        </div>
+      </a>
+
+      <a href="javascript:void(0)" class="blog-card reveal" data-blog-target="blog-post-2">
+        <div class="blog-thumb">🔐</div>
+        <div class="blog-content">
+          <div class="blog-meta">
+            <span class="blog-tag">Governance</span>
+            <span class="blog-date">Sep 07, 2025</span>
+          </div>
+          <h3>Operational Data Governance That Delivers Knowledge, Care and Trust</h3>
+          <p>Most data governance fails not because of intent, but because it never delivers knowledge, care, or trust where data is actually used.</p>
+          <div class="blog-read-more">Read More →</div>
+        </div>
+      </a>
+
+      <!-- <a href="javascript:void(0)" class="blog-card reveal" data-blog-target="blog-post-3"> -->
+        <!-- <div class="blog-thumb">⚡</div> -->
+        <!-- <div class="blog-content"> -->
+          <!-- <div class="blog-meta"> -->
+            <!-- <span class="blog-tag">Engineering</span> -->
+            <!-- <span class="blog-date">Jan 15, 2026</span> -->
+          <!-- </div> -->
+          <!-- <h3>Accelerating ETL with Delta Live Tables</h3> -->
+          <!-- <p>Practical patterns for building production-grade data pipelines faster using declarative transformation frameworks and automated quality checks.</p> -->
+          <!-- <div class="blog-read-more">Read More →</div> -->
+        <!-- </div> -->
+      <!-- </a> -->
+
+      <a href="javascript:void(0)" class="blog-card reveal" data-blog-target="blog-post-4">
+        <div class="blog-thumb">🎯</div>
+        <div class="blog-content">
+          <div class="blog-meta">
+            <span class="blog-tag">Strategy</span>
+            <span class="blog-date">Jun 30, 2025</span>
+          </div>
+          <h3>ROI Metrics That Matter for Data Platforms</h3>
+          <p>Beyond vanity metrics: how to measure and communicate the business value of modern data platform investments to executive stakeholders.</p>
+          <div class="blog-read-more">Read More →</div>
+        </div>
+      </a>
+
+      <!-- <a href="javascript:void(0)" class="blog-card reveal" data-blog-target="blog-post-5"> -->
+        <!-- <div class="blog-thumb">🌐</div> -->
+        <!-- <div class="blog-content"> -->
+          <!-- <div class="blog-meta"> -->
+            <!-- <span class="blog-tag">Cloud</span> -->
+            <!-- <span class="blog-date">Dec 29, 2025</span> -->
+          <!-- </div> -->
+          <!-- <h3>Multi-Cloud Strategy for ANZ Enterprises</h3> -->
+          <!-- <p>Navigating the complexities of hybrid and multi-cloud architectures while maintaining data sovereignty and compliance in the AU/NZ region.</p> -->
+          <!-- <div class="blog-read-more">Read More →</div> -->
+        <!-- </div> -->
+      <!-- </a> -->
+
+      <!-- <a href="javascript:void(0)" class="blog-card reveal" data-blog-target="blog-post-6"> -->
+        <!-- <div class="blog-thumb">🤖</div> -->
+        <!-- <div class="blog-content"> -->
+          <!-- <div class="blog-meta"> -->
+            <!-- <span class="blog-tag">AI/ML</span> -->
+            <!-- <span class="blog-date">Dec 20, 2025</span> -->
+          <!-- </div> -->
+          <!-- <h3>From Data Lake to AI Factory: MLOps on Databricks</h3> -->
+          <!-- <p>How to evolve your lakehouse into a production ML platform with automated retraining, monitoring, and model serving capabilities.</p> -->
+          <!-- <div class="blog-read-more">Read More →</div> -->
+        <!-- </div> -->
+      <!-- </a> -->
+
+    </div>
+  </div>
+</section>
+
+<!-- ── PEOPLE ── -->
+<section class="people" id="people">
+  <div class="section-header reveal">
+    <span class="label">// People</span>
+    <h2>Our Exceptional Team</h2>
+  </div>
+
+  <div class="people-hero reveal">
+    <div class="people-hero-media">
+      <img class="people-hero-img" src="./images/People_3.png" alt="KC Team Diversity" />
+    </div>
+    <div class="people-hero-copy">
+      <p>We are a team of dedicated professionals with extensive experience in data analytics — from strategy and platform blueprints to engineering and final solution delivery.</p>
+      <p>Our culture emphasises diversity, respect, trust, and care — values we carry into every client engagement. As a boutique consultancy, we build strong customer relationships and deliver tailored, high‑quality solutions.</p>
+      <p>Our top-tier strategists, architects, and engineers bridge the gap between theory and practice, delivering real‑world outcomes with a friendly, collaborative approach. <a href="javascript:void(0)" id="joinTeamLink" class="join-team-link" onclick="openJoinTeamModal(); return false;">Join Our Team</a></p>
+    </div>
+  </div>    
+  <!-- </div> -->
+
+  <div class="benefits-grid people-highlights">
+    <div class="benefit-card reveal">
+      <div class="benefit-icon icon-orange">🧭</div>
+      <h3>Strategy → Engineering → Outcomes</h3>
+      <p>End-to-end capability that aligns business priorities to pragmatic, scalable delivery — without losing momentum in the middle.</p>
+    </div>
+
+    <div class="benefit-card reveal">
+      <div class="benefit-icon icon-blue">🤝</div>
+      <h3>Culture That Scales Trust</h3>
+      <p>Diversity, respect, and care create the operating system for high‑performing teams and resilient client partnerships.</p>
+    </div>
+
+    <div class="benefit-card reveal">
+      <div class="benefit-icon icon-green">🧩</div>
+      <h3>Bridge Theory to Practice</h3>
+      <p>Practical frameworks, accelerators, and craftsmanship that convert architectural intent into decision‑grade capability.</p>
+    </div>
+  </div>
+
+  <!-- <div class="people-join"> -->
+    <!-- <div class="people-join-card reveal"> -->
+      <!-- <span class="label join-label">// Join Our Team</span> -->
+      <!-- <h3>Work with KC</h3> -->
+      <!-- <p>Interested to be part of our culture? Share your details and we’ll get in touch. If you attach a resume, we’ll reference it in the application email (some email clients may not support auto-attaching files).</p> -->
+
+      <!-- <form id="joinForm" class="people-form" autocomplete="on"> -->
+        <!-- <div class="contact-grid"> -->
+          <!-- <input id="joinName" class="chat-input" type="text" placeholder="Name" /> -->
+          <!-- <input id="joinPhone" class="chat-input" type="tel" placeholder="Phone" /> -->
+        <!-- </div> -->
+
+        <!-- <div class="contact-grid"> -->
+          <!-- <input id="joinEmail" class="chat-input" type="email" placeholder="Email *" required /> -->
+          <!-- <input id="joinRole" class="chat-input" type="text" placeholder="Role / Interest Area" /> -->
+        <!-- </div> -->
+
+        <!-- <div class="file-row"> -->
+          <!-- <input id="joinResume" class="chat-input" type="file" accept=".pdf,.doc,.docx" /> -->
+          <!-- <div class="file-hint">Accepted formats: PDF, DOC, DOCX.</div> -->
+        <!-- </div> -->
+
+        <!-- <textarea id="joinMessage" class="chat-input chat-textarea" placeholder="Tell us a bit about yourself (optional)"></textarea> -->
+
+        <!-- <div class="btn-row"> -->
+          <!-- <button type="submit" class="btn-primary">Submit Application ↗</button> -->
+          <!-- <button type="button" class="btn-ghost" onclick="openContactModal()">Contact Us</button> -->
+        <!-- </div> -->
+
+        <!-- <div class="file-hint" style="margin-top:.8rem;"> -->
+          <!-- This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply. -->
+        <!-- </div> -->
+      <!-- </form> -->
+    <!-- </div> -->
+  <!-- </div> -->
+</section>
+
+
+<!-- ── CTA ── -->
+<section class="cta-band" id="contact">
+  <div class="cta-box reveal">
+    <span class="label">// Ready?</span>
+    <h2>Let's Build Your<br>Data Future Together</h2>
+    <p>Whether you're starting from scratch or scaling an existing platform, KC brings the expertise to get you there — fast.</p>
+    <button onclick="openContactModal()" class="btn-primary">Get in Touch ↗</button>
+  </div>
+</section>
+
+
+
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo"><img src="https://img1.wsimg.com/isteam/ip/4e498c06-ddd9-4421-844c-cbc70ac9d132/onlinelogomaker-010722-1231-3621.png/:/rs=h:100,cg:true,m/qt=q:100/ll" alt="KANTHERI Consulting" /></div>
+    <ul class="footer-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#benefits">Benefits</a></li>
+      <li><a href="#pipeline">Services</a></li>
+      <li><a href="#people">Team</a></li>
+      <li><a href="#blog">Blog</a></li>
+      <li><a href="javascript:void(0)" onclick="openContactModal()">Contact</a></li>
+    </ul>
+    <span class="footer-copy">© 2026 KANTHERI Consulting — All Rights Reserved</span>
+  </div>
+</footer>
+
+
+
+<!-- ── BLOG POST TEMPLATES (placeholders) ── -->
+<!-- Paste your full blog HTML inside the corresponding <template> body. -->
+<template id="blog-post-1">
+  <div class="blog-post">
+    <div class="blog-post-meta">
+      <span class="blog-tag">Lakehouse</span>
+      <span class="blog-date">Jan 28, 2026</span>
+    </div>
+    <h2 class="blog-post-title">Building Enterprise Lakehouse</h2>
+    <div class="blog-post-body">
+      <p>Modern Cloud Data & Analytics Platforms are inherently complex due to their multifaceted architecture, governance, integration, engineering, and security requirements. When setting them up for Tertiary Education Providers (TEP), this complexity is amplified by the unique demands and challenges associated with TEP environments. Addressing these complexities requires a tailored approach that aligns with the specific needs of these institutions.</br></br>
+
+KANTHERI Consulting (KC) aims to illustrate a comprehensive strategy and approach to establish an enterprise-scale modern data & analytics platform using a short case study of A Large Tertiary Education Provider (ALTEP) in Australia. This case study will help you understand a comprehensive and successful approach to establishing a modern enterprise cloud data & analytics platform.</br></br>
+
+<h4>Begin by understanding the business</h4>
+Understanding the business before establishing a modern data & analytics platform is crucial. It ensures alignment with strategic objectives, tailored solutions, enhanced user engagement, and effective risk management. This approach transforms the data platform into a strategic asset that drives business success and fosters innovation.</br></br>
+
+TEPs are not merely centers of learning but also hubs of innovation, cultural enrichment, and social influence. These institutions embody complex ecosystems, given their multifaceted roles in society and a diverse array of stakeholders, including students, faculty, alumni, industry partners, governmental bodies, and the broader community. Each of these groups contributes uniquely to advancing the TEP's vision across education, research, and community engagement.</br></br>
+
+Furthermore, TEPs navigate complex financial landscapes, drawing from sources like tuition, grants, and donations to support their educational facilities, research endeavors, and scholarship programs.</br></br>
+
+TEPs operate with a long-term vision, aligning strategic plans with sustainability, ethical practices, and inclusivity, aiming to create a holistic environment that fosters growth, innovation, and societal progress.</br></br>
+
+ALTEP exemplifies the concept of a TEP as an ecosystem. With an annual operating budget exceeding $2 billion, ALTEP serves over 65,000 students and employs 12,000 staff members across its eight campuses worldwide. These campuses collectively house over 200 buildings dedicated to various academic, research, and community functions. ALTEP conducts research across 150 different fields, highlighting its extensive contribution to knowledge and innovation.</br></br>
+
+To enable informed decision-making and cultivate overall data maturity supported by a modern data & analytics platform, it is vital to tailor the platform to the unique characteristics, aspirations, and strengths of ALTEP.</br></br>
+
+<h4>Evaluate existing data practices</h4>
+Over the preceding two decades, the data landscape grew organically without strategic direction, resulting in ALTEP's data ecosystem becoming intricate and disjointed. The central Business Intelligence (BI) team, tasked with enterprise-wide reporting, struggled under the weight of managing multiple data platforms rife with duplicated data. This duplication complicated workflows, burdening the BI team with a tangled web of redundant processes spanning various departments. These departments operated independently, using diverse data and technology setups for managing, analysing, and visualising data, with conflicting data definitions between departments and often deviating from the enterprise reporting standards. Consequently, trust in the data among senior stakeholders eroded.</br></br>
+
+This lack of coordination and strategic direction was also evident in the central BI team's repeated but unsuccessful efforts to replace legacy platforms with newer ones. Consequently, both the old and new systems continued to coexist, resulting in a total of six different BI platforms. This mishmash exacerbated the BI team's challenges.</br></br>
+
+Confronted with substantial data landscape issues, ALTEP acknowledged the imperative to mitigate information delivery complexities and data security risks posed by legacy environments. With a vision of becoming an innovative and data-centric institution, the Chief Information Officer, in collaboration with the Director of Data & Analytics, set out to craft a comprehensive Data Strategy. Central to this strategy was the establishment of a resilient enterprise data platform, aimed at improving data management, fostering growth, and mitigating risks.</br></br>
+
+In light of this context, it was crucial for KC to understand and address the underlying dynamics of existing data practices and to understand why previous attempts to decommission legacy BI environments had failed. To tackle this effectively, KC conducted extensive discovery workshops with departmental stakeholders to gather insights into their needs, expectations, and workflows, and performed in-depth technology design reviews of legacy BI implementations to identify gaps.</br></br>
+
+Through this process, KC identified several challenges prevalent across various BI platforms at ALTEP. Listed below are some of them:</br></br>
+<ul>
+<li>The evolution of Data & Analytics was tightly coupled with advancements, or the lack thereof, in certain legacy technologies.</li>
+<li>The current implementations lacked scalability due to restrictive licensing regimes.</li>
+<li>Data privacy considerations were inadequate and often an afterthought.</li>
+<li>None of the BI platforms offered built-in capabilities for advanced predictive analytics.</li>
+<li>Data management across departments was disorganised, lacked an operating model and governance, leading to information silos.</li>
+<li>Technology maintenance, including tasks like patching and upgrades, was frequent, cumbersome, and a massive operational overhead.</li>
+<li>Despite early migrations of legacy BI implementations to popular cloud platforms, they lacked a true cloud operating mindset in their implementation.</li>
+<li>Curated data products (reports, datasets, models, etc.) contained source system speak at the consumption layer, making them brittle and prone to issues as source systems evolved, resulting in constant code changes with little or no business value.</li>
+</ul>
+<figure>
+  <img src="./images/Bld_Ent_LH_1.png" alt="Legacy Data Platform(s) Ecosystem">
+  <figcaption>Figure 1: Legacy Data Platform(s) Ecosystem. Note: Some of the technology products have been intentionally misnamed.</figcaption>
+</figure>
+<h4>KC's Approach</h4>
+Learning from previous decommissioning efforts, it became evident that solely viewing the challenge as a technological one would not suffice. These attempts failed due to the environment's complexity and perpetuated outdated inefficiencies. Legacy systems, not designed for modern infrastructure, resulted in subpar performance, scalability issues, high maintenance costs, and complex integration challenges. Additionally, they lacked robust security and compliance features, hindering innovation and user experience improvements.</br></br>
+
+To avoid repeating these mistakes, the approach is to fundamentally overhaul, re-architect, and re-engineer the Enterprise Data & Analytics Platform with meticulous planning, commitment, and a principled approach. This involves steering clear of big-bang releases and adopting an iterative and incremental delivery model. The goal is to continuously deliver strategic value and operational needs for seamless, accurate, secure, and compliant data management, while maintaining stable foundations guided by architecture. Furthermore, the platform should aim to assist ALTEP in successfully decommissioning all legacy platforms while delivering enhanced functional and non-functional value to its user base.</br></br>
+
+Leveraging decades of data & analytics experience and expertise, along with sustained innovation, has enabled KC to propose a comprehensive Modern Cloud Data & Analytics Platform leveraging Delta Architecture. KC's approach is seen as one of the earliest (Q3 2019) and most comprehensive in building Enterprise Lakehouse platforms in the region.</br></br>
+
+Drawing from this experience, KC has architected & engineered the Modern Cloud Data & Analytics Platform at ALTEP. Following are some of the salient principles of the platform that KC has proposed:</br></br>
+<ul>
+<li><h5>Separation of Storage & Compute:</h5> Offering flexibility, scalability, performance optimisation, and fault tolerance, this principle addresses the license-driven and non-scalable storage and compute challenges of ALTEP legacy systems. It should be a fundamental principle of any modern data platform.</li>
+<li><h5>Privacy by Design & Engineering:</h5> Designing with data privacy in mind and embedding processes like Pseudonymisation and Forgettability through data engineering ensures compliance, builds trust, mitigates risks, and promotes transparency and accountability, crucial for handling PII data at ALTEP.</li>
+<li><h5>Reduced Vendor-Proprietary Data Formats & Technology:</h5> Leveraging open-source storage data formats and technology at the core of the platform to future-proof the platform ecosystem, promoting interoperability, flexibility, reduced vendor lock-in, scalability, and community support.</li>
+<li><h5>Source System Agnosticism:</h5> Aligning with industry or TEP data models in consumption layers ensures platform stability, flexibility, simplification, consistency, and maintainability while avoiding brittleness caused by source system vernacular.</li>
+<li><h5>Federated Autonomous Self-Service Environments (FASEs):</h5> Establishing autonomous, self-service environments for data consumption and analysis across various departments democratises innovation and value creation while maintaining centralised governance and security.</li>
+<li><h5>Framework-Driven Data Engineering:</h5> Ensuring standardisation, efficiency, collaboration, and operational cost optimisation by adopting a framework-driven engineering approach in building sustainable Modern Data Platforms, avoiding haphazard development practices and multiple code flavours.</li>
+<li><h5>Operational Data Governance:</h5> Implementing an actionable and operational data governance approach that harvests & fosters knowledge building, care, and trust in ALTEP data assets within the unified architecture of the Modern Data Platform, enhancing organisational data management practices.</li>
+</ul>
+<figure>
+  <img src="./images/KC_LH_1.png" alt="Modern Enterprise Lakehouse Platform">
+  <figcaption>Figure 2: Building Modern Enterprise Lakehouse Platform - KANTHERI Consulting approach</figcaption>
+</figure>
+<h4>Outcome</h4>
+With committed strategic leadership and strong engagement from the internal data team in continuous learning and quality delivery, ALTEP has established a cutting-edge Enterprise Modern Data & Analytics Platform. Their dedication, combined with well-defined architectural and design guidelines and a framework-driven accelerated data engineering process by KC, has made the ALTEP Lakehouse one of the earliest and most comprehensive Lakehouses in the ANZ region. This platform not only serves as a strategic asset for ALTEP but also enabled the successful and rapid decommissioning of all half a dozen legacy environments within the first year after its establishment and operation.</br></br>
+
+The well-architected and framework-driven engineering of the ALTEP Lakehouse has cut data ingestion and transformation unit costs by approximately 60% compared to multiple legacy BI systems, resulting in significant cost takeouts for ALTEP. The platform's resilient, non-redundant data processing has also significantly improved productivity and value generation per ALTEP data team member. This advancement has enabled the ALTEP data team to focus on better engagement with users and deliver curated data products. It has also empowered and positioned ALTEP for analytics innovation, leveraging robust architectural and data management foundations essential for training accurate and reliable Predictive and GenAI models. As a result, the ALTEP's data services have expanded significantly, increasing the active user base by approximately 400% within the Lakehouse environment.</br></br>
+
+Furthermore, the platform through its implementation of FASEs has disintermediated the process of information sharing between the user and the Lakehouse, enabling the ALTEP to accelerate towards its future as a data-driven organisation with well-governed and efficient data democratisation.</br></br>
+
+</p>
+    </div>
+  </div>
+</template>
+
+<template id="blog-post-2">
+  <div class="blog-post">
+    <div class="blog-post-meta">
+      <span class="blog-tag">Governance</span>
+      <span class="blog-date">Jan 21, 2026</span>
+    </div>
+    <h2 class="blog-post-title">Operational Data Governance That Delivers Knowledge, Care and Trust</h2>
+    <div class="blog-post-body">
+      <p>
+<h4>How KANTHERI Consulting Operationalises Governance for Modern Data Platforms</h4>
+
+Data governance has long suffered from an identity crisis. In many organisations, it is perceived as either a compliance obligation or an academic exercise — well-intentioned, heavily documented, and largely disconnected from how data is actually created, consumed, and acted upon. As organisations modernise their data estates through lakehouse platforms, cloud-native architectures, and AI-driven analytics, this disconnect becomes not just inefficient, but actively damaging.<br/><br/>
+
+Modern data platforms move fast. They are federated, iterative, and continuously evolving. Traditional governance models, designed for static data warehouses and centralised control, simply cannot keep pace. The result is predictable: governance is bypassed, trust erodes, and organisations find themselves with technically sophisticated platforms that still fail to deliver reliable, decision-grade intelligence.<br/><br/>
+
+At KANTHERI Consulting (KC), we take a fundamentally different view. Data governance is not a policy layer that sits above the platform. It is not a committee, a checklist, or a quarterly review. Governance, if it is to work in a modern environment, must be <b>operational by design</b>. It must run every day, at scale, embedded directly into the data platform and the delivery lifecycle.<br/><br/>
+
+This is the essence of KC’s Operational Data Governance approach. It is practical, executable, and proven in complex enterprise environments. Most importantly, it is anchored in three outcomes that matter to every data-driven organisation: <b>Knowledge, Care, and Trust</b>.<br/><br/>
+
+
+<h4>From Governance as Control to Governance as Capability</h4>
+
+The shift to modern data platforms has changed the role of data in organisations. Data is no longer consumed only by analysts and report developers. It now powers real-time operational decisions, self-service analytics, regulatory reporting, and increasingly, AI and machine learning models that directly influence business outcomes.<br/><br/>
+
+In this context, governance cannot rely on manual controls or retrospective assurance. It must become a <b>platform capability</b> — something that is always on, consistently applied, and largely automated.<br/><br/>
+
+KC defines Operational Data Governance as the set of people, processes, and technologies that ensure data is discoverable, protected, understood, trusted, and usable throughout its lifecycle. It operationalises governance principles through daily execution, rather than abstract policy.<br/><br/>
+
+This approach does not replace strategic or procedural governance. Instead, it brings those principles to life by embedding them into how data is engineered, published, accessed, and consumed.<br/><br/>
+
+
+
+<h4>Knowledge: Enabling Discovery and Understanding at Scale</h4>
+
+The first pillar of KC’s governance approach is <b>Knowledge</b>. Without the ability to discover and understand data, governance fails before it begins. Data that cannot be found, interpreted, or trusted will not be used — or worse, it will be misused.<br/><br/>
+
+In many organisations, data knowledge lives in people’s heads, disconnected documents, or outdated spreadsheets. This creates fragility, dependency on individuals, and a constant risk of misinterpretation. KC addresses this by making data knowledge a <b>first-class operational asset</b>.<br/><br/>
+
+Knowledge, in KC’s model, means that users can easily discover what data exists, understand what it represents, assess its quality and suitability, and trace where it comes from. This is achieved through the systematic operationalisation of metadata, lineage, and data definitions across the platform.<br/><br/>
+
+Rather than treating metadata management as an afterthought, KC embeds it into the data lifecycle. Data assets are catalogued as they are created. Domains and entities are clearly defined. Data dictionaries provide consistent, business-aligned definitions that remove ambiguity and enable shared understanding across technical and non-technical stakeholders.<br/><br/>
+
+Crucially, lineage is not limited to technical pipelines. KC extends lineage to show how data moves through transformations, aggregations, and consumption layers, providing transparency into how insights are produced. This enables faster root-cause analysis, safer change management, and greater confidence in analytics outputs.<br/><br/>
+
+By operationalising knowledge in this way, organisations move away from data silos and tribal knowledge. Instead, they create a shared, discoverable understanding of their data landscape — a prerequisite for scale, self-service, and AI readiness.<br/><br/>
+
+
+<h4>Care: Protecting Data Without Slowing the Business</h4>
+
+The second pillar of KC’s approach is <b>Care</b>. Care is about ensuring that data is handled responsibly, securely, and in accordance with regulatory and ethical obligations — without turning governance into a bottleneck.<br/><br/>
+
+In traditional models, security and privacy controls are often bolted on late, enforced manually, or implemented inconsistently across systems. This creates risk, slows delivery, and leads to workarounds that undermine governance altogether.<br/><br/>
+
+KC takes a different approach by embedding care directly into the operational fabric of the platform. Security, privacy, and data protection are treated as design principles, not afterthoughts.<br/><br/>
+
+Authorisation and authentication are managed through clearly defined access models that align to data domains and user personas. Access is granted based on purpose and role, not convenience, and is enforced consistently through platform-native controls. Sensitive data, including personally identifiable information (PII), is classified, tagged, and governed automatically using metadata-driven policies.<br/><br/>
+
+Data protection mechanisms such as encryption, pseudonymisation, and controlled forgettability are implemented as operational routines. These routines are not manual processes reliant on human intervention; they are automated, monitored, and auditable. This ensures compliance with privacy obligations while maintaining agility.<br/><br/>
+
+Care also extends to how data is exchanged between systems and external parties. KC operationalises secure, standardised data exchange practices that preserve data integrity and traceability, ensuring that governance does not stop at organisational boundaries.<br/><br/>
+
+By embedding care into the platform itself, KC enables organisations to scale data access safely. Governance becomes an enabler of self-service, not a barrier to it.<br/><br/>
+
+
+<h4>Trust: Making Data Reliable, Endorsed, and Actionable</h4>
+
+The ultimate goal of governance is <b>Trust</b>. Trust determines whether data is used confidently in decision-making, analytics, and automation. Without trust, even the most advanced data platform becomes an expensive reporting engine.<br/><br/>
+
+KC treats trust as something that must be actively earned and continuously maintained. It cannot be assumed, and it cannot be declared by policy alone.<br/><br/>
+
+Operational trust is built through a combination of data quality management, clear ownership, certification, and feedback mechanisms. KC operationalises trust by making data quality visible, measurable, and actionable.<br/><br/>
+
+Rather than abstract quality aspirations, KC defines concrete data quality KPIs aligned to business outcomes. These metrics are monitored continuously, not periodically, and are tied to accountable roles within the organisation. When quality issues arise, they are surfaced early, traced through lineage, and resolved through defined remediation processes.<br/><br/>
+
+Trust is further reinforced through data asset endorsement and certification. Data products that meet agreed standards for quality, security, and definition are formally endorsed, providing consumers with confidence that they are using reliable, fit-for-purpose data. This reduces duplication, rework, and the proliferation of unofficial datasets.<br/><br/>
+
+Equally important is feedback. KC embeds feedback loops into the governance operating model, enabling users to raise concerns, suggest improvements, and contribute to the continuous evolution of data assets. Governance is not imposed top-down; it is co-owned and continuously improved.<br/><br/>
+
+Through these mechanisms, trust becomes tangible. Users know which data they can rely on, why they can rely on it, and who is accountable for it.<br/><br/>
+
+
+<h4>Governing Data as an Operational Asset</h4>
+
+A defining characteristic of KC’s approach is the recognition that data exists at multiple levels of abstraction, each requiring governance that is appropriate to its role.<br/><br/>
+
+KC distinguishes between operational data assets, data products, and the functional routines that manage them. Operational data assets power day-to-day business processes and require real-time quality, consistency, and availability. Data products, by contrast, are curated, consumption-ready representations designed to support specific analytical or decision-making use cases.<br/><br/>
+
+Governance is applied differently at each level, but always operationally. Quality checks occur at ingestion for operational data. Certification and endorsement occur at the data product level. Functional routines ensure that transformations, validations, and classifications are executed consistently and transparently.<br/><br/>
+
+This layered approach ensures that governance scales without becoming rigid. It supports both operational excellence and analytical innovation.<br/><br/>
+
+
+<h4>Clear Accountability Through a Federated Operating Model</h4>
+
+Governance fails when accountability is unclear or unrealistic. Centralised models struggle to scale, while decentralised models often collapse into inconsistency.<br/><br/>
+
+KC addresses this through a federated operating model that balances central oversight with domain-level ownership. Strategic direction is provided by a central data governance function, while execution is distributed across data domains and delivery teams.<br/><br/>
+
+Roles are clearly defined, with accountability aligned to capability. Technical custodians manage platform and infrastructure concerns. Data governors define quality and integrity expectations. Data stewards bridge business context and technical implementation. Engineers and subject matter experts operationalise governance through delivery.<br/><br/>
+
+This structure ensures that governance is close to the data, while remaining aligned to enterprise objectives.<br/><br/>
+
+
+<h4>Technology as an Accelerator, Not a Crutch</h4>
+
+KC is deliberate in its use of technology. Tools alone do not create governance, but the right tooling can make governance scalable, transparent, and sustainable.<br/><br/>
+
+In modern data platforms, KC leverages enterprise governance tooling alongside platform-native capabilities to automate metadata capture, lineage tracking, policy enforcement, and quality monitoring. Governance signals are generated by the platform itself, reducing reliance on manual reporting and audits.<br/><br/>
+
+Technology is used to enforce standards, surface insights, and reduce friction for both producers and consumers of data. Governance becomes something that happens naturally as part of delivery, not something that teams have to remember to do.<br/><br/>
+
+
+<h4>Ethics as an Operational Imperative</h4>
+
+Modern governance cannot stop at compliance. As data increasingly influences funding decisions, public policy, and automated outcomes, ethical considerations become central.<br/><br/>
+
+KC embeds data ethics into operational governance through clear principles, structured frameworks, and formal charters that guide decision-making. Ethical assessments are integrated into data initiatives, ensuring that potential bias, misuse, or unintended consequences are identified early.<br/><br/>
+
+Ethics is not treated as a separate discipline. It is woven into how data is collected, processed, shared, and consumed.<br/><br/>
+
+
+
+<h4>From Governance Theatre to Governance Execution</h4>
+
+Many organisations are still performing governance theatre — producing policies, frameworks, and diagrams that look impressive but have little impact on how data is actually used.<br/><br/>
+
+KC helps organisations move beyond this. By focusing on operational execution, embedding governance into platforms, and aligning it to Knowledge, Care, and Trust, governance becomes a strategic capability rather than an administrative burden.<br/><br/>
+
+This is governance that scales with modern data platforms. Governance that enables analytics and AI. Governance that builds trust at speed.<br/><br/>
+
+That is the KC difference.<br/><br/>
+	  
+	  </p>
+    </div>
+  </div>
+</template>
+
+<template id="blog-post-3">
+  <div class="blog-post">
+    <div class="blog-post-meta">
+      <span class="blog-tag">Engineering</span>
+      <span class="blog-date">Jan 15, 2026</span>
+    </div>
+    <h2 class="blog-post-title">Accelerating ETL with Delta Live Tables</h2>
+    <div class="blog-post-body">
+      <p><b>Placeholder content.</b> Paste your blog here.</p>
+    </div>
+  </div>
+</template>
+
+<template id="blog-post-4">
+  <div class="blog-post">
+    <div class="blog-post-meta">
+      <span class="blog-tag">Strategy</span>
+      <span class="blog-date">Jun 08, 2025</span>
+    </div>
+    <h2 class="blog-post-title">ROI Metrics That Matter for Data Platforms</h2>
+    <div class="blog-post-body">
+      <p>
+			For many organisations, the conversation about data platform ROI still starts—and often ends—with cost.</br></br>
+
+			Licensing reduction. Infrastructure savings. Lower run costs. Headcount efficiency.</br></br>
+
+			These metrics are easy to quantify, easy to defend in a business case, and easy to explain to finance. But they tell only a small part of the story. When organisations modernise decades-old analytics estates, particularly those built on tightly coupled, proprietary platforms such as SAS, the most valuable returns rarely sit neatly on a cost line.</br></br>
+
+			In a recent Australian engagement, KC worked with a large enterprise to decommission a long-running SAS data platform and transition to a modern, enterprise-grade lakehouse. The SAS environment had been in place for decades. It was deeply embedded in business processes, trusted by some teams, distrusted by others, and increasingly unable to keep pace with the organisation’s needs.</br></br>
+
+			This was not a technology refresh. It was a fundamental reset of how data was engineered, governed, trusted, and used to run the business.</br></br>
+
+			The ROI that emerged from this transformation was real, measurable, and sustained—but it did not show up where traditional ROI models tend to look. Instead, it surfaced across speed, trust, resilience, productivity, and optionality. These are the ROI metrics that actually matter for modern data platforms.</br></br>
+
+			<h4>The Starting Point: When Legacy Platforms Become a Constraint</h4>
+
+			By the time KC engaged, the SAS platform had become both mission-critical and mission-limiting.</br></br>
+
+			Over years of incremental change, the environment had grown complex. Data ingestion processes were brittle. Business logic was tightly embedded in SAS programs. Analytics delivery relied on a small number of specialist skills. Changes to upstream systems often triggered downstream breakage, creating hesitation around transformation initiatives.</br></br>
+
+			From a business perspective, analytics felt slow and expensive. Requests took weeks to deliver. Numbers were frequently questioned. Teams spent more time reconciling data than acting on it. Innovation was possible, but it required workarounds, parallel environments, and significant effort to productionise anything new.</br></br>
+
+			From a technology perspective, the platform carried high fixed costs, limited elasticity, and growing technical debt. Scaling analytics usage increased cost disproportionately. Introducing advanced analytics or AI required bespoke solutions outside the core platform.</br></br>
+
+			The organisation was not failing at analytics. But it was paying an increasingly high price—financially and operationally—to stand still.</br></br>
+
+			<h4>Rethinking ROI: Moving Beyond Cost Reduction</h4>
+
+			From the outset, KC reframed the ROI discussion.</br></br>
+
+			Rather than positioning the program as a SAS replacement or a cost-reduction exercise, the engagement was framed around a single question: What would change if data became a reliable, scalable operating asset rather than a fragile dependency?</br></br>
+
+			This shift mattered. It allowed the organisation to evaluate ROI across multiple dimensions, not just platform spend. It also created space to measure improvements that compound over time rather than delivering a one-off saving.</br></br>
+
+			The move to a modern lakehouse was designed not just to lower cost, but to change how analytics was delivered, trusted, and consumed across the enterprise.</br></br>
+
+			<h4>Time-to-Insight: Where ROI Became Immediately Visible</h4>
+
+			One of the most immediate and visible impacts of the transformation was the reduction in time required to deliver analytics outcomes.</br></br>
+
+			Under the SAS model, analytics delivery followed a familiar pattern. Data extraction and preparation were heavily manual. Business logic was duplicated across programs. Small changes required specialist intervention and extensive testing. Even modest requests could take weeks to move from idea to production.</br></br>
+
+			As part of the lakehouse implementation, KC redesigned ingestion and transformation pipelines using standardised, automated patterns. Business logic was decoupled from source systems and centralised into reusable layers. Datasets were engineered for reuse rather than one-off consumption.</br></br>
+
+			The result was a fundamental shift in delivery speed.</br></br>
+
+			Across priority analytics domains, end-to-end delivery timelines were reduced by approximately 45–60%. Time spent on data preparation alone dropped by more than 50%, freeing teams to focus on analysis rather than plumbing. Reusable datasets and feature foundations increased by over 70%, meaning new use cases could be delivered without starting from scratch.</br></br>
+
+			This improvement was not just an efficiency gain for technology teams. It directly reduced decision latency across the business. Forecasts were delivered earlier. Operational insights arrived while they were still actionable. Leaders were able to respond faster to emerging trends.</br></br>
+
+			In ROI terms, this translated into earlier value capture and reduced opportunity cost—benefits rarely reflected in traditional platform business cases, but deeply felt by the business.</br></br>
+
+			<h4>Cost Efficiency Without Capability Trade-Offs</h4>
+
+			Cost still mattered. But the story was more nuanced than simple savings.</br></br>
+
+			The legacy SAS platform carried high fixed licensing costs and limited flexibility. Scaling analytics usage meant scaling cost, often disproportionately. Infrastructure utilisation was inefficient, and platform upgrades were expensive and disruptive.</br></br>
+
+			The lakehouse introduced a very different cost model. Compute and storage scaled independently. Workloads could be isolated and optimised. Cost visibility improved, allowing teams to understand what they were consuming and why.</br></br>
+
+			As a result, the organisation achieved a 30–40% reduction in total platform operating costs. Cost per analytics workload dropped by more than 50%, even as usage increased significantly. Infrastructure utilisation efficiency improved by roughly 35%, reflecting better alignment between consumption and demand.</br></br>
+
+			Crucially, these improvements were achieved without reducing capability. In fact, analytics and AI usage expanded materially. More users accessed data. More use cases were delivered. More advanced analytics became feasible.</br></br>
+
+			The ROI here was not just cost reduction. It was a rebalancing of cost and value—doing more, better, and faster at a lower total cost.</br></br>
+
+			<h4>Trust as an ROI Metric</h4>
+
+			One of the most underestimated drivers of ROI in data platforms is trust.</br></br>
+
+			Over time, the SAS environment had accumulated multiple definitions of key metrics, limited lineage visibility, and manual governance controls. The result was predictable. Analysts reconciled numbers across systems. Stakeholders questioned outputs. Decisions were delayed while data was validated.</br></br>
+
+			This lack of trust carried a hidden cost. Highly skilled people spent time validating data rather than generating insight. Executives hesitated to act on analytics outputs. Audit and compliance processes required significant manual effort.</br></br>
+
+			KC addressed trust by embedding governance directly into the lakehouse. Data quality rules were operationalised in pipelines. Lineage was captured end-to-end. Security and access policies were enforced consistently. AI governance controls were introduced alongside analytics governance, ensuring future scalability.</br></br>
+
+			The impact was significant. Data quality-related incidents reduced by 60–70%. Manual reconciliation effort dropped by approximately 50%. Audit and compliance preparation effort reduced by more than 40%.</br></br>
+
+			Perhaps more importantly, executive confidence in analytics outputs increased. While difficult to quantify precisely, this shift changed how data was used in decision-making. Leaders moved from questioning numbers to acting on them. Trust became an operational asset—and one of the highest-value ROI outcomes of the program.</br></br>
+
+			<h4>Productivity and Capacity Release</h4>
+
+			Legacy analytics platforms often concentrate capability in a small number of specialists. This creates delivery bottlenecks and organisational risk.</br></br>
+
+			In this case, the SAS environment relied heavily on a limited pool of skilled resources. Knowledge was embedded in code rather than shared through patterns or platforms. Innovation throughput was constrained by availability rather than demand.</br></br>
+
+			The lakehouse, combined with KC’s delivery and operating model, enabled a federated approach. Standardised patterns reduced cognitive load. Self-service analytics was enabled within governance guardrails. Domain teams could build and extend analytics independently without fragmenting the platform.</br></br>
+
+			The result was a measurable productivity uplift. Analytics team productivity increased by approximately 40–55%. Dependency on niche specialist skills reduced by around 35%. The number of new analytics use cases delivered per quarter increased by more than 60%.</br></br>
+
+			This was not achieved by adding headcount. ROI was realised through capacity release—unlocking the ability to deliver more value with the same resources.</br></br>
+
+			<h4>Resilience and Change Readiness</h4>
+
+			Another critical ROI dimension was resilience.</br></br>
+
+			The legacy SAS platform was tightly coupled to upstream systems and downstream reporting. Even small changes could trigger cascading impacts, increasing risk and slowing transformation initiatives elsewhere in the organisation.</br></br>
+
+			KC redesigned the architecture to decouple ingestion from consumption, business logic from source systems, and analytics delivery from vendor-specific tooling. This made the platform inherently more resilient to change.</br></br>
+
+			The impact was tangible. Change-related analytics disruptions reduced by more than 50%. The time required to onboard new data sources dropped by approximately 45%. Platform-related incidents impacting business users reduced by around 40%.</br></br>
+
+			This resilience reduced operational risk and increased organisational confidence to change. Transformation programs no longer needed to work around the analytics platform. Instead, the platform supported change.</br></br>
+
+			<h4>AI Readiness as Ongoing ROI</h4>
+
+			One of the most strategic ROI outcomes was optionality.</br></br>
+
+			Under the SAS model, advanced analytics and AI initiatives required bespoke environments and duplicated data pipelines. Moving from proof of concept to production was slow and risky.</br></br>
+
+			The lakehouse was designed as AI-native from day one. Model-ready datasets were embedded into the platform. Feature foundations were reusable across use cases. Governance extended naturally to AI assets.</br></br>
+
+			As a result, time to productionise AI use cases reduced by 50–65%. Feature reuse across models increased by more than 60%. New AI use cases could be delivered without re-platforming, with incremental use case delivery increasing by around 70%.</br></br>
+
+			This created a sustained ROI profile. The platform continued to generate value as new opportunities emerged, without resetting investment or introducing parallel stacks.</br></br>
+
+			<h4>Decommissioning as a Value Event</h4>
+
+			Finally, the act of decommissioning the SAS platform itself delivered ROI beyond licence savings.</br></br>
+
+			Removing the legacy environment reduced technical debt, simplified the data estate, and lowered operational complexity. Platform footprint reduced by more than 40%. Operational support effort dropped by approximately 30%. Incident response times improved by around 45%.</br></br>
+
+			More importantly, the organisation moved from maintaining legacy systems to investing in future capability. The decommissioning was not an endpoint; it was a release of constraint.</br></br>
+
+			<h4>What This Teaches Us About ROI</h4>
+
+			This engagement reinforced a critical lesson.</br></br>
+
+			Modern data platform ROI is not a single metric. It is the compounding effect of improvements across speed, trust, productivity, resilience, cost efficiency, and future readiness. These outcomes reinforce each other. Faster insight increases trust. Trust 
+
+
+
+accelerates adoption. Adoption improves productivity. Productivity increases value.</br></br>
+
+			Traditional ROI models struggle to capture this dynamic. But organisations feel it in how quickly they move, how confidently they decide, and how effectively they scale analytics and AI.</br></br>
+
+			<h4>The KC Perspective</h4>
+
+			KC does not modernise data platforms to chase technology trends. We modernise platforms to change the economics of data.</br></br>
+
+			By decommissioning a decades-old SAS estate and replacing it with a governed, AI-native lakehouse, this Australian organisation did more than reduce cost. It transformed how data was trusted, delivered, and embedded into daily operations.</br></br>
+
+			That is where modern data platforms deliver their true ROI—not as a line item, but as a sustained operating advantage.</br></br>
+			<span class="blog-tag">#ModernDataPlatforms </br>#DataPlatformROI </br>#LakehouseArchitecture </br>#TrustedData </br>#EnterpriseAnalytics</span>
+	  </p>
+    </div>
+  </div>
+</template>
+
+<template id="blog-post-5">
+  <div class="blog-post">
+    <div class="blog-post-meta">
+      <span class="blog-tag">Cloud</span>
+      <span class="blog-date">Dec 29, 2025</span>
+    </div>
+    <h2 class="blog-post-title">Multi-Cloud Strategy for ANZ Enterprises</h2>
+    <div class="blog-post-body">
+      <p><b>Placeholder content.</b> Paste your blog here.</p>
+    </div>
+  </div>
+</template>
+
+<template id="blog-post-6">
+  <div class="blog-post">
+    <div class="blog-post-meta">
+      <span class="blog-tag">AI/ML</span>
+      <span class="blog-date">Dec 20, 2025</span>
+    </div>
+    <h2 class="blog-post-title">From Data Lake to AI Factory: MLOps on Databricks</h2>
+    <div class="blog-post-body">
+      <p><b>Placeholder content.</b> Paste your blog here.</p>
+    </div>
+  </div>
+</template>
+
+
+
+<!-- ── JOIN OUR TEAM MODAL ── -->
+<div id="joinTeamModal" class="join-modal" aria-hidden="true">
+  <div class="join-container" role="dialog" aria-modal="true" aria-label="Join our team">
+    <div class="join-header">
+      <h3>Join Our Team</h3>
+      <button id="joinTeamClose" class="join-close" type="button" aria-label="Close join our team" onclick="closeJoinTeamModal()">✕</button>
+    </div>
+
+    <div class="join-body">
+      <p class="join-hint">Interested to be part of our culture? Share your details and we’ll get in touch.</p>
+
+      <form id="joinTeamForm" autocomplete="on">
+        <div class="contact-grid">
+          <input id="jtName" class="chat-input" type="text" placeholder="Name *" required />
+          <input id="jtPhone" class="chat-input" type="tel" placeholder="Phone *" required />
+        </div>
+
+        <div class="contact-grid">
+          <input id="jtEmail" class="chat-input" type="email" placeholder="Email *" required />
+          <input id="jtCv" class="chat-input" type="file" accept=".pdf,.doc,.docx" required />
+        </div>
+
+        <p class="join-hint" style="margin-top:.2rem; margin-bottom: 0;">CV formats accepted: PDF, DOC, DOCX.</p>
+
+        <div style="margin-top: .9rem;">
+          <textarea id="jtAbout" class="chat-input chat-textarea" placeholder="Tell us a bit about yourself (optional)"></textarea>
+        </div>
+
+        <div style="margin-top: 1.1rem;">
+          <!-- Replace sitekey with your Google reCAPTCHA v2 site key -->
+          <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+        </div>
+
+        <div class="join-actions">
+          <button type="submit" class="btn-primary">Submit ↗</button>
+          <button id="joinTeamCancel" type="button" class="btn-ghost" onclick="closeJoinTeamModal()">Cancel</button>
+        </div>
+
+        <p class="join-hint" style="margin-top:.8rem; margin-bottom: 0;">This site is protected by reCAPTCHA and the Google Privacy Policy and Terms of Service apply.</p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ── BLOG MODAL ── -->
+<div id="blogModal" class="blog-modal" aria-hidden="true">
+  <div class="blog-modal-container" role="dialog" aria-modal="true" aria-label="Blog post">
+    <div class="blog-modal-header">
+      <div class="blog-modal-title">Blog</div>
+      <button class="blog-modal-close" onclick="closeBlogModal()" aria-label="Close blog">✕</button>
+    </div>
+    <div id="blogModalBody" class="blog-modal-body"></div>
+  </div>
+</div>
+
+<!-- ── SCRIPTS ── -->
+<script>
+// ── Canvas animated grid + particles ──
+(function(){
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [], t = 0;
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // grid lines
+  function drawGrid(){
+    ctx.strokeStyle = 'rgba(1,51,103,0.06)';
+    ctx.lineWidth = 1;
+    const sp = 80;
+    for(let x = 0; x < W; x += sp){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    }
+    for(let y = 0; y < H; y += sp){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+    }
+  }
+
+  // particles
+  class P {
+    constructor(){ this.reset(); }
+    reset(){
+      this.x = Math.random()*W;
+      this.y = Math.random()*H;
+      this.vx = (Math.random()-.5)*.4;
+      this.vy = (Math.random()-.5)*.4;
+      this.r  = Math.random()*1.8+.4;
+      this.a  = Math.random()*.28+.08;
+      this.hue = [18,190,110,46][Math.floor(Math.random()*4)]; // orange/cyan/green/gold-ish hues
+    }
+    update(){
+      this.x += this.vx; this.y += this.vy;
+      if(this.x<0||this.x>W||this.y<0||this.y>H) this.reset();
+    }
+    draw(){
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+      ctx.fillStyle = `hsla(${this.hue},80%,55%,${this.a})`;
+      ctx.fill();
+    }
+  }
+
+  for(let i=0;i<70;i++) particles.push(new P());
+
+  // connections
+  function drawLinks(){
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d  = Math.sqrt(dx*dx+dy*dy);
+        if(d < 110){
+          const a = (1 - d/110)*0.10;
+          ctx.strokeStyle = `rgba(235,98,35,${a})`;
+          ctx.lineWidth = .7;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // subtle vignette for white bg
+  function drawVignette(){
+    const grd = ctx.createRadialGradient(W/2,H/2,H*.1,W/2,H/2,H*.85);
+    grd.addColorStop(0,'rgba(255,255,255,0)');
+    grd.addColorStop(1,'rgba(255,255,255,0.65)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    drawGrid();
+    particles.forEach(p=>{ p.update(); p.draw(); });
+    drawLinks();
+    drawVignette();
+    t++;
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+
+// ── HERO horizontal carousel helpers ──
+(function(){
+  const el = document.getElementById('heroCarousel');
+  if(!el) return;
+
+  // Keyboard navigation (left/right) for accessibility
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    // Only when user is near top (hero in view) to avoid hijacking
+    if (window.scrollY > window.innerHeight * 0.65) return;
+
+    const dir = e.key === 'ArrowRight' ? 1 : -1;
+    const w = el.clientWidth || window.innerWidth;
+    const idx = Math.round(el.scrollLeft / w);
+    const next = Math.max(0, Math.min(slideCount - 1, idx + dir));
+    el.scrollTo({ left: next * w, behavior: 'smooth' });
+  }, { passive: true });
+
+  // Auto-advance every 5 seconds (continuous loop)
+  let heroTimer = null;
+  const slides = Array.from(el.querySelectorAll('.hero-slide'));
+  const slideCount = Math.max(1, slides.length);
+
+// Dedicated hero nav controls (prev/next)
+const prevBtn = document.querySelector('.hero-nav-prev');
+const nextBtn = document.querySelector('.hero-nav-next');
+
+function updateNav(){
+  if (!prevBtn || !nextBtn) return;
+  const idx = getIndex();
+  prevBtn.classList.toggle('is-hidden', idx <= 0);
+  nextBtn.classList.toggle('is-hidden', idx >= slideCount - 1);
+}
+
+function goTo(delta){
+  const idx = getIndex();
+  const next = Math.max(0, Math.min(slideCount - 1, idx + delta));
+  scrollToIndex(next);
+  updateNav();
+}
+
+if (prevBtn) {
+  prevBtn.addEventListener('click', () => {
+    stopAuto();
+    goTo(-1);
+    setTimeout(startAuto, 8000);
+  });
+}
+if (nextBtn) {
+  nextBtn.addEventListener('click', () => {
+    stopAuto();
+    goTo(1);
+    setTimeout(startAuto, 8000);
+  });
+}
+
+
+  function scrollToIndex(i){
+    const w = el.clientWidth || window.innerWidth;
+    el.scrollTo({ left: i * w, behavior: 'smooth' });
+    // ensure button state stays in sync with smooth scrolling
+    setTimeout(updateNav, 350);
+  }
+
+  function getIndex(){
+    const w = el.clientWidth || window.innerWidth;
+    return Math.round(el.scrollLeft / w);
+  }
+
+  function startAuto(){
+    stopAuto();
+    heroTimer = setInterval(() => {
+      const idx = getIndex();
+      const next = (idx + 1) % slideCount;
+      scrollToIndex(next);
+    }, 5000);
+  }
+
+  function stopAuto(){
+    if (heroTimer) clearInterval(heroTimer);
+    heroTimer = null;
+  }
+
+  // Pause on user interaction, then resume
+  ['pointerdown','wheel','touchstart','keydown'].forEach(evt => {
+    el.addEventListener(evt, () => {
+      stopAuto();
+      setTimeout(startAuto, 8000);
+    }, { passive: true });
+  });
+
+  // Keep alignment correct on resize
+  window.addEventListener('resize', () => { scrollToIndex(getIndex()); updateNav(); }, { passive: true });
+
+  // Update nav buttons as the user scrolls / auto-advances
+  let navRaf = null;
+  el.addEventListener('scroll', () => {
+    if (navRaf) return;
+    navRaf = requestAnimationFrame(() => { navRaf = null; updateNav(); });
+  }, { passive: true });
+
+  updateNav();
+  startAuto();
+
+})();
+
+// ── Nav scroll shrink ──
+window.addEventListener('scroll', ()=>{
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// ── Scroll-reveal ──
+(function(){
+  const els = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('visible'); }
+    });
+  },{ threshold: 0.18 });
+  els.forEach(el => obs.observe(el));
+})();
+
+
+
+// ── Blog modal (placeholder popups) ──
+(function(){
+  function openFromTarget(targetId){
+    const modal = document.getElementById('blogModal');
+    const body  = document.getElementById('blogModalBody');
+    const tpl   = document.getElementById(targetId);
+
+    if (!modal || !body || !tpl) return;
+
+    body.innerHTML = tpl.innerHTML;
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+
+    // Basic focus management
+    const closeBtn = modal.querySelector('.blog-modal-close');
+    if (closeBtn) closeBtn.focus();
+  }
+
+  window.openBlogModal = function(targetId){
+    openFromTarget(targetId);
+  };
+
+  window.closeBlogModal = function(){
+    const modal = document.getElementById('blogModal');
+    const body  = document.getElementById('blogModalBody');
+    if (!modal || !body) return;
+
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    body.innerHTML = '';
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Bind blog cards
+    document.querySelectorAll('.blog-card[data-blog-target]').forEach(card => {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = card.getAttribute('data-blog-target');
+        if (targetId) openFromTarget(targetId);
+      });
+    });
+
+    // Close on backdrop click
+    const modal = document.getElementById('blogModal');
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) window.closeBlogModal();
+      });
+    }
+
+    // Close on ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const m = document.getElementById('blogModal');
+        if (m && m.classList.contains('active')) window.closeBlogModal();
+      }
+    });
+  });
+})();
+
+
+
+// ── Contact modal (fast path: copy a ready email draft) ──
+function openContactModal() {
+  const m = document.getElementById('contactModal');
+  if (!m) return;
+  m.classList.add('active');
+  m.setAttribute('aria-hidden', 'false');
+  const nameEl = document.getElementById('contactName');
+  if (nameEl) setTimeout(() => nameEl.focus(), 50);
+}
+
+function closeContactModal() {
+  const m = document.getElementById('contactModal');
+  if (!m) return;
+  m.classList.remove('active');
+  m.setAttribute('aria-hidden', 'true');
+}
+
+
+// ── Join Our Team modal (mirrors Contact modal behaviour) ──
+function openJoinTeamModal() {
+  const m = document.getElementById('joinTeamModal');
+  if (!m) return;
+  m.classList.add('active');
+  m.setAttribute('aria-hidden', 'false');
+  const nameEl = document.getElementById('jtName');
+  if (nameEl) setTimeout(() => nameEl.focus(), 50);
+}
+
+function closeJoinTeamModal() {
+  const m = document.getElementById('joinTeamModal');
+  if (!m) return;
+  m.classList.remove('active');
+  m.setAttribute('aria-hidden', 'true');
+}
+
+// Init handlers (backdrop + ESC + basic validation)
+(function initJoinTeamModal(){
+  const m = document.getElementById('joinTeamModal');
+  if (!m) return;
+
+  // Close on backdrop click
+  m.addEventListener('click', (e) => {
+    if (e.target === m) closeJoinTeamModal();
+  });
+
+  // Close on ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && m.classList.contains('active')) closeJoinTeamModal();
+  });
+
+  // Ensure hyperlink works even if inline onclick removed in future
+  const link = document.getElementById('joinTeamLink');
+  if (link) {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      openJoinTeamModal();
+    });
+  }
+
+  // Form submit (client-side only; wire to backend as needed)
+  const form = document.getElementById('joinTeamForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name  = (document.getElementById('jtName')?.value || '').trim();
+      const phone = (document.getElementById('jtPhone')?.value || '').trim();
+      const email = (document.getElementById('jtEmail')?.value || '').trim();
+      const file  = document.getElementById('jtCv')?.files?.[0];
+
+      if (!name || !phone || !email || !file) {
+        alert('Please complete Name, Phone, Email, and upload your CV.');
+        return;
+      }
+
+      // File validation
+      const okExt = /\.(pdf|doc|docx)$/i;
+      if (!okExt.test(file.name)) {
+        alert('CV must be PDF, DOC, or DOCX.');
+        return;
+      }
+
+      // reCAPTCHA validation (v2)
+      if (window.grecaptcha && typeof window.grecaptcha.getResponse === 'function') {
+        const token = window.grecaptcha.getResponse();
+        if (!token) {
+          alert('Please complete the reCAPTCHA.');
+          return;
+        }
+      }
+
+      // Success state (no network call in this static mock)
+      const body = m.querySelector('.join-body');
+      if (body) {
+        body.innerHTML = `
+          <div class="chat-success" style="padding:1.2rem 0;">
+            <div class="success-icon">✅</div>
+            <h4>Thanks for your interest!</h4>
+            <p>We’ve received your details. Our team will be in touch.</p>
+            <div style="margin-top:1.1rem;">
+              <button class="btn-primary" type="button" onclick="closeJoinTeamModal()">Close</button>
+            </div>
+          </div>
+        `;
+      }
+    });
+  }
+})();
+
+
+function _copyText(text){
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  // Fallback for older browsers
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  return Promise.resolve();
+}
+
+function copyToAddress() {
+  _copyText('info@kantheri.com');
+}
+
+function copyContactEmail() {
+  const name = (document.getElementById('contactName')?.value || '').trim();
+  const email = (document.getElementById('contactEmail')?.value || '').trim();
+  const subject = (document.getElementById('contactSubject')?.value || '').trim();
+  const body = (document.getElementById('contactBody')?.value || '').trim();
+
+  if (!name || !email || !subject) {
+    alert('Please fill in Name, Email, and Subject');
+    return;
+  }
+
+  const draft =
+`TO: info@kantheri.com
+SUBJECT: ${subject}
+
+Hello KC team,
+
+My name is ${name} (${email}).
+
+${body ? body : 'Context: I’d like to discuss how KC can help us modernise our data & AI platform and operationalise trusted intelligence.'}
+
+Thanks,
+${name}
+`;
+  _copyText(draft).then(() => {
+    alert('Copied. Paste into your email client and send.');
+  });
+}
+
+function buildContactEmailBody() {
+  const name = (document.getElementById('contactName')?.value || '').trim();
+  const email = (document.getElementById('contactEmail')?.value || '').trim();
+  const body = (document.getElementById('contactBody')?.value || '').trim();
+
+  return (
+    `Hello KC team,
+
+` +
+    (name ? `My name is ${name}${email ? ` (${email})` : ''}.
+
+` : '') +
+    (body
+      ? body + `
+
+`
+      : `Context: I’d like to discuss how KC can help us modernise our data & AI platform and operationalise trusted intelligence.
+
+`) +
+    `Thanks,
+` +
+    (name || '')
+  );
+}
+
+function openMailtoFallback() {
+  const subject = (document.getElementById('contactSubject')?.value || 'KC enquiry').trim();
+  const body = buildContactEmailBody();
+
+  window.location.href =
+    `mailto:info@kantheri.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+/**
+ * Best-effort "web compose" that opens a Gmail compose window if available.
+ * Falls back to mailto.
+ */
+function openWebCompose() {
+  const subject = (document.getElementById('contactSubject')?.value || 'KC enquiry').trim();
+  const body = buildContactEmailBody();
+
+  // Gmail compose URL (works for most users signed into Gmail in-browser)
+  const gmailUrl =
+    `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent('info@kantheri.com')}` +
+    `&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  // Attempt to open Gmail compose in a new tab; fall back to mailto if blocked.
+  const w = window.open(gmailUrl, '_blank', 'noopener,noreferrer');
+  if (!w) openMailtoFallback();
+}
+
+// Close contact modal on backdrop click + ESC
+document.addEventListener('DOMContentLoaded', () => {
+  
+// ── Join Our Team modal + form ──
+  const joinModal = document.getElementById('joinTeamModal');
+  const joinLink  = document.getElementById('joinTeamLink');
+  const joinClose = document.getElementById('joinTeamClose');
+  const joinCancel = document.getElementById('joinTeamCancel');
+  const joinForm  = document.getElementById('joinTeamForm');
+
+  function openJoinTeamModal(){
+    if (!joinModal) return;
+    joinModal.classList.add('active');
+    joinModal.setAttribute('aria-hidden', 'false');
+    const nameEl = document.getElementById('jtName');
+    if (nameEl) setTimeout(() => nameEl.focus(), 50);
+  }
+
+  function closeJoinTeamModal(){
+    if (!joinModal) return;
+    joinModal.classList.remove('active');
+    joinModal.setAttribute('aria-hidden', 'true');
+  }
+
+  // Open
+  if (joinLink) {
+    joinLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openJoinTeamModal();
+    });
+  }
+
+  // Close (X)
+  if (joinClose) {
+    joinClose.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeJoinTeamModal();
+    });
+  }
+
+  // Close (Cancel)
+  if (joinCancel) {
+    joinCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeJoinTeamModal();
+    });
+  }
+
+  // Close on backdrop click
+  if (joinModal) {
+    joinModal.addEventListener('click', (e) => {
+      if (e.target === joinModal) closeJoinTeamModal();
+    });
+  }
+
+  // ESC close (only when join modal active)
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (joinModal && joinModal.classList.contains('active')) closeJoinTeamModal();
+  });
+
+  // Form submit (front-end only; integrate your backend endpoint as needed)
+  if (joinForm) {
+    joinForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name  = (document.getElementById('jtName')?.value || '').trim();
+      const phone = (document.getElementById('jtPhone')?.value || '').trim();
+      const email = (document.getElementById('jtEmail')?.value || '').trim();
+      const cvEl  = document.getElementById('jtCv');
+      const file  = cvEl && cvEl.files && cvEl.files[0] ? cvEl.files[0] : null;
+
+      if (!name || !phone || !email) {
+        alert('Please provide Name, Phone, and Email.');
+        return;
+      }
+
+      if (file){
+        const okExt = ['pdf','doc','docx'];
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (!okExt.includes(ext)){
+          alert('CV must be a PDF, DOC, or DOCX file.');
+          return;
+        }
+      }
+
+      // reCAPTCHA check (v2)
+      try{
+        if (window.grecaptcha) {
+          const token = window.grecaptcha.getResponse();
+          if (!token) {
+            alert('Please complete the reCAPTCHA.');
+            return;
+          }
+        } else {
+          alert('reCAPTCHA script not loaded. Please check connectivity or configuration.');
+          return;
+        }
+      } catch (err) {
+        alert('reCAPTCHA validation failed. Please try again.');
+        return;
+      }
+
+      alert('Thanks — your details have been submitted. We will be in touch.');
+      joinForm.reset();
+      try{ window.grecaptcha.reset(); } catch(e){}
+      closeJoinTeamModal();
+    });
+  }
+
+const m = document.getElementById('contactModal');
+
+  if (m) {
+    m.addEventListener('click', (e) => {
+      if (e.target === m) closeContactModal();
+    });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const mm = document.getElementById('contactModal');
+      if (mm && mm.classList.contains('active')) closeContactModal();
+    }
+  });
+});
+
+
+// ── Chat Wizard ──
+const chatData = {
+  name: '',
+  email: '',
+  company: '',
+  interest: '',
+  timeline: '',
+  details: ''
+};
+
+function openChatWizard() {
+  document.getElementById('chatModal').classList.add('active');
+  showStep(1);
+}
+
+function closeChatWizard() {
+  document.getElementById('chatModal').classList.remove('active');
+  // Reset after animation
+  setTimeout(() => {
+    showStep(1);
+    Object.keys(chatData).forEach(k => chatData[k] = '');
+  }, 400);
+}
+
+function showStep(step) {
+  document.querySelectorAll('.chat-step').forEach(el => el.classList.remove('active'));
+  document.getElementById('step' + step).classList.add('active');
+}
+
+function selectInterest(interest) {
+  chatData.interest = interest;
+  showStep(2);
+}
+
+function selectTimeline(timeline) {
+  chatData.timeline = timeline;
+  showStep(3);
+}
+
+function goBack(step) {
+  showStep(step);
+}
+
+function submitDetails() {
+  chatData.name = document.getElementById('name').value.trim();
+  chatData.email = document.getElementById('email').value.trim();
+  chatData.company = document.getElementById('company').value.trim();
+  chatData.details = document.getElementById('details').value.trim();
+
+  if (!chatData.name || !chatData.email || !chatData.company) {
+    alert('Please fill in all required fields');
+    return;
+  }
+
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(chatData.email)) {
+    alert('Please enter a valid email address');
+    return;
+  }
+
+  // Populate review
+  document.getElementById('reviewName').textContent = chatData.name;
+  document.getElementById('reviewEmail').textContent = chatData.email;
+  document.getElementById('reviewCompany').textContent = chatData.company;
+  document.getElementById('reviewInterest').textContent = chatData.interest;
+  document.getElementById('reviewTimeline').textContent = chatData.timeline;
+
+  showStep(4);
+}
+
+function finalSubmit() {
+  // In production, this would send to your backend/CRM
+  const mailtoLink = `mailto:info@kantheri.com?subject=New Lead: ${encodeURIComponent(chatData.interest)}&body=${encodeURIComponent(
+    `Name: ${chatData.name}\nEmail: ${chatData.email}\nCompany: ${chatData.company}\nInterest: ${chatData.interest}\nTimeline: ${chatData.timeline}\n\nDetails:\n${chatData.details || 'N/A'}`
+  )}`;
+
+  window.location.href = mailtoLink;
+
+  showStep(5);
+  setTimeout(() => {
+    closeChatWizard();
+  }, 3000);
+}
+
+// Close modal on outside click
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('chatModal');
+  if (e.target === modal) {
+    closeChatWizard();
+  }
+});
+
+/* ─── Join Our Team: lightweight mailto submit ─── */
+(function () {
+  const form = document.getElementById('joinForm');
+  if (!form) return;
+
+  function val(id) {
+    return (document.getElementById(id)?.value || '').trim();
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const name = val('joinName');
+    const phone = val('joinPhone');
+    const email = val('joinEmail');
+    const role = val('joinRole');
+    const msg  = val('joinMessage');
+
+    const resumeInput = document.getElementById('joinResume');
+    const resumeName = resumeInput && resumeInput.files && resumeInput.files[0] ? resumeInput.files[0].name : '';
+
+    const subject = `KC Careers Enquiry${role ? ' — ' + role : ''}`;
+    const body =
+      `Hello KC team,\n\n` +
+      `I’m interested in joining KANTHERI Consulting.\n\n` +
+      (name ? `Name: ${name}\n` : '') +
+      (email ? `Email: ${email}\n` : '') +
+      (phone ? `Phone: ${phone}\n` : '') +
+      (role ? `Role / Interest: ${role}\n` : '') +
+      (resumeName ? `Resume file: ${resumeName}\n` : '') +
+      (msg ? `\nMessage:\n${msg}\n` : '') +
+      `\nThanks,\n${name || ''}`;
+
+    window.location.href =
+      `mailto:info@kantheri.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  });
+})();
+
+
+</script>
+
+<!-- ── CHAT WIZARD MODAL ── -->
+<div id="chatModal" class="chat-modal">
+  <div class="chat-container">
+    <div class="chat-header">
+      <h3>💬 Let's Start</h3>
+      <button class="chat-close" onclick="closeChatWizard()">✕</button>
+    </div>
+    <div class="chat-body">
+
+      <!-- STEP 1: Interest -->
+      <div id="step1" class="chat-step active">
+        <h4>What brings you here today?</h4>
+        <div class="chat-options">
+          <div class="chat-option" onclick="selectInterest('Lakehouse Implementation')">
+            <span class="emoji">🏗️</span>
+            <span>Build a Modern Enterprise Data Platform / Lakehouse</span>
+          </div>
+          <div class="chat-option" onclick="selectInterest('Data Strategy & Architecture')">
+            <span class="emoji">📋</span>
+            <span>Define a Data & AI Strategy and Roadmap</span>
+          </div>
+          <div class="chat-option" onclick="selectInterest('Platform Modernization')">
+            <span class="emoji">⚡</span>
+            <span>Modernise or Optimise an Existing Data Platform</span>
+          </div>
+          <div class="chat-option" onclick="selectInterest('Governance & Compliance')">
+            <span class="emoji">🔐</span>
+            <span>Strengthen Data Governance, Security & Compliance</span>
+          </div>
+          <div class="chat-option" onclick="selectInterest('Analytics & BI Enablement')">
+            <span class="emoji">📊</span>
+            <span>Enable AI & Self-Service Across the Business</span>
+          </div>	  
+          <div class="chat-option" onclick="selectInterest('General Inquiry')">
+            <span class="emoji">💡</span>
+            <span>Just Exploring / Early-Stage Discovery</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: Timeline -->
+      <div id="step2" class="chat-step">
+        <h4>What's your timeline?</h4>
+        <div class="chat-options">
+          <div class="chat-option" onclick="selectTimeline('Urgent (1-3 months)')">
+            <span class="emoji">🚀</span>
+            <span>Urgent — need to start within 1-3 months</span>
+          </div>
+          <div class="chat-option" onclick="selectTimeline('Near-term (3-6 months)')">
+            <span class="emoji">📅</span>
+            <span>Near-term — planning for 3-6 months</span>
+          </div>
+          <div class="chat-option" onclick="selectTimeline('Long-term (6-12 months)')">
+            <span class="emoji">🗓️</span>
+            <span>Long-term — 6-12 months out</span>
+          </div>
+          <div class="chat-option" onclick="selectTimeline('Exploring (12+ months)')">
+            <span class="emoji">🔍</span>
+            <span>Just exploring — 12+ months</span>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button class="chat-btn chat-btn-secondary" onclick="goBack(1)">← Back</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Details -->
+      <div id="step3" class="chat-step">
+        <h4>Tell us about yourself</h4>
+        <div class="chat-input-group">
+          <label>Name *</label>
+          <input type="text" id="name" class="chat-input" placeholder="John Smith" />
+        </div>
+        <div class="chat-input-group">
+          <label>Email *</label>
+          <input type="email" id="email" class="chat-input" placeholder="john@company.com" />
+        </div>
+        <div class="chat-input-group">
+          <label>Company *</label>
+          <input type="text" id="company" class="chat-input" placeholder="Acme Corp" />
+        </div>
+        <div class="chat-input-group">
+          <label>Additional details (optional)</label>
+          <textarea id="details" class="chat-input chat-textarea" placeholder="Any specific challenges or requirements you'd like to share?"></textarea>
+        </div>
+        <div class="chat-actions">
+          <button class="chat-btn chat-btn-secondary" onclick="goBack(2)">← Back</button>
+          <button class="chat-btn chat-btn-primary" onclick="submitDetails()">Continue →</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Review -->
+      <div id="step4" class="chat-step">
+        <h4>Review your information</h4>
+        <div class="chat-summary">
+          <h5>Your Details</h5>
+          <div class="chat-summary-item">
+            <span class="chat-summary-label">Name:</span>
+            <span class="chat-summary-value" id="reviewName"></span>
+          </div>
+          <div class="chat-summary-item">
+            <span class="chat-summary-label">Email:</span>
+            <span class="chat-summary-value" id="reviewEmail"></span>
+          </div>
+          <div class="chat-summary-item">
+            <span class="chat-summary-label">Company:</span>
+            <span class="chat-summary-value" id="reviewCompany"></span>
+          </div>
+          <div class="chat-summary-item">
+            <span class="chat-summary-label">Interest:</span>
+            <span class="chat-summary-value" id="reviewInterest"></span>
+          </div>
+          <div class="chat-summary-item">
+            <span class="chat-summary-label">Timeline:</span>
+            <span class="chat-summary-value" id="reviewTimeline"></span>
+          </div>
+        </div>
+        <p style="color: var(--clr-text-dim); font-size: .82rem; margin-bottom: 1.5rem;">We'll reach out within 24 hours to discuss your needs.</p>
+        <div class="chat-actions">
+          <button class="chat-btn chat-btn-secondary" onclick="goBack(3)">← Edit</button>
+          <button class="chat-btn chat-btn-primary" onclick="finalSubmit()">Submit 🚀</button>
+        </div>
+      </div>
+
+      <!-- STEP 5: Success -->
+      <div id="step5" class="chat-step">
+        <div class="chat-success">
+          <div class="success-icon">✅</div>
+          <h4>Thanks for reaching out!</h4>
+          <p>We'll be in touch within 24 hours to start the conversation about your data journey.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── CONTACT MODAL ── -->
+<div id="contactModal" class="contact-modal" aria-hidden="true">
+  <div class="contact-container" role="dialog" aria-modal="true" aria-label="Contact KC">
+    <div class="contact-header">
+      <h3>✉️ Get in touch</h3>
+      <button class="contact-close" onclick="closeContactModal()" aria-label="Close contact">✕</button>
+    </div>
+    <div class="contact-body">
+      <div class="contact-hint">Share a few details. We’ll format a ready-to-send message to <b>info@kantheri.com</b> you can copy and paste into any email client (fastest, avoids slow Outlook launches).</div>
+
+      <div class="contact-to" aria-label="To address">
+        <div>
+          <div class="to-label">To</div>
+          <div class="to-value" id="contactToValue">info@kantheri.com</div>
+        </div>
+        <button class="chat-btn chat-btn-secondary" style="flex: 0 0 auto; padding: .6rem 1rem;" onclick="copyToAddress()">Copy</button>
+      </div>
+
+      <div class="contact-grid">
+        <div class="chat-input-group">
+          <label>Your name *</label>
+          <input type="text" id="contactName" class="chat-input" placeholder="John Smith" />
+        </div>
+        <div class="chat-input-group">
+          <label>Your email *</label>
+          <input type="email" id="contactEmail" class="chat-input" placeholder="john@company.com" />
+        </div>
+      </div>
+
+      <div class="chat-input-group">
+        <label>Subject *</label>
+        <input type="text" id="contactSubject" class="chat-input" value="KC enquiry — Data & AI platform discussion" />
+      </div>
+
+      <div class="chat-input-group">
+        <label>Message (optional)</label>
+        <textarea id="contactBody" class="chat-input chat-textarea" placeholder="Suggested prompt: What outcomes are you trying to achieve? What’s your current platform? What’s your timeline?"></textarea>
+      </div>
+
+      <div class="contact-actions">
+        <button class="chat-btn chat-btn-primary" onclick="copyContactEmail()">Copy email draft</button>
+        <button class="chat-btn chat-btn-secondary" onclick="openMailtoFallback()">Open email app</button>
+      </div>
+</div>
+  </div>
+</div>
+
+
+<script>
+// ── Mobile nav (hamburger) ──
+(function(){
+  const nav = document.getElementById('navbar');
+  const toggle = document.getElementById('navToggle');
+  const overlay = document.getElementById('navOverlay');
+  const menu = document.getElementById('navMenu');
+  if(!nav || !toggle || !overlay || !menu) return;
+
+  function setNavHeight(){
+    const h = nav.offsetHeight || 72;
+    document.documentElement.style.setProperty('--nav-h', h + 'px');
+  }
+  setNavHeight();
+  window.addEventListener('resize', setNavHeight, { passive: true });
+
+  function close(){
+    document.body.classList.remove('nav-open');
+    toggle.setAttribute('aria-expanded','false');
+    overlay.setAttribute('aria-hidden','true');
+  }
+
+  function open(){
+    document.body.classList.add('nav-open');
+    toggle.setAttribute('aria-expanded','true');
+    overlay.setAttribute('aria-hidden','false');
+  }
+
+  toggle.addEventListener('click', () => {
+    const isOpen = document.body.classList.contains('nav-open');
+    if(isOpen) close(); else open();
+  });
+
+  overlay.addEventListener('click', close);
+
+  // Close on nav link click (mobile)
+  menu.addEventListener('click', (e) => {
+    const a = e.target && e.target.closest && e.target.closest('a');
+    if(a) close();
+  });
+
+  // Close on Escape
+  window.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') close();
+  });
+
+  // When moving to desktop width, ensure menu is closed
+  window.addEventListener('resize', () => {
+    if(window.innerWidth > 820) close();
+  }, { passive: true });
+})();
+
+</script>
 </body>
 </html>
